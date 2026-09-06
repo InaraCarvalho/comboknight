@@ -1,0 +1,23 @@
+=================================================
+=== COMBO KNIGHT FULL DYNAMIC RUNTIME QA REPORT ===
+=================================================
+[PASS] T01_InitialState_StartModal: StartPanel modal visible, timeScale is 0, game inactive.
+[PASS] T02_StartGame_Activation: Game active, timeScale 1, StartPanel dismissed.
+[PASS] T03_HUD_Initialization: HUD correctly reflects Lamina Real, Score 0, Combo x0, Coins 0.
+[PASS] T04_Horizontal_Movement: Player moves right and left responsive to input.
+[PASS] T05_Jump_Physics: Player jumped with upward vertical velocity and landed.
+[PASS] T06_Weapon_Swap: Weapon toggled between Broadsword and Dagger, HUD text synced.
+[PASS] T07_Attack_Slash: Player attack executed with slash animation and sound.
+[PASS] T07B_Mobile_Touch_Gestures: Touch Right (half screen), Touch Left, and Swipe Up Jump all functional.
+[PASS] T07C_Virtual_Buttons_Present: All 4 virtual gameplay buttons (Left, Right, Jump, Swap) present and configured.
+[PASS] T08_Combat_SlimeKill: Slime killed: Kills=2, Combo=x1, Score=200
+[PASS] T09_Combat_BatKill_ComboMultiplier: Bat killed with multiplier: Kills=3, Combo=x2, Score=520
+[PASS] T10_Coin_MagnetAndCollect: Coin magnetized and collected: Total Coins=2
+[PASS] T11_Combo_DecayAndReset: Combo expired cleanly after duration timeout.
+[PASS] T12_Player_DamageAndIFrames: Damage registered, invulnerability protected subsequent hits, i-frames expired.
+[PASS] T13_Pause_Modal: Pause activated, timeScale 0, PausePanel visible.
+[PASS] T14_Mute_AudioToggle: Mute toggled audio volume between 0 and 1.
+[PASS] T15_GameOver_ModalAndStats: Game Over triggered, GameOverPanel visible, FinalScore=620, HighScore=1420, Coins=2, Kills=3
+-------------------------------------------------
+SUMMARY: Total=17 | Passed=17 | Failed=0
+=================================================

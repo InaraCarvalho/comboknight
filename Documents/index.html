@@ -1,0 +1,530 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combo Knight | Unity 2D | Handoff Tecnico</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --surface-color: #161b22;
+            --card-color: #21262d;
+            --border-color: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-orange: #d29922;
+            --code-bg: #1f242c;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding-bottom: 48px;
+        }
+        header {
+            background-color: var(--surface-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 32px 24px 24px;
+            text-align: center;
+        }
+        .header-tag {
+            display: inline-block;
+            background-color: rgba(88, 166, 255, 0.12);
+            color: var(--accent-blue);
+            border: 1px solid rgba(88, 166, 255, 0.28);
+            border-radius: 4px;
+            padding: 3px 10px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        h1 {
+            font-size: 1.85rem;
+            color: #ffffff;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
+        }
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.98rem;
+            max-width: 760px;
+            margin: 0 auto 18px;
+            line-height: 1.5;
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+        nav a {
+            color: var(--text-primary);
+            text-decoration: none;
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: border-color 0.15s ease, color 0.15s ease;
+        }
+        nav a:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+        main {
+            max-width: 980px;
+            margin: 28px auto 0;
+            padding: 0 20px;
+        }
+        section {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        h2 {
+            font-size: 1.25rem;
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+        h3 {
+            font-size: 1rem;
+            color: var(--accent-blue);
+            font-weight: 600;
+            margin: 18px 0 10px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .card {
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 14px;
+        }
+        .script-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .script-name {
+            font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+        .script-badge {
+            font-size: 0.72rem;
+            padding: 2px 7px;
+            border-radius: 4px;
+            background-color: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .script-desc {
+            font-size: 0.86rem;
+            color: var(--text-secondary);
+            line-height: 1.45;
+        }
+        .item-box {
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .item-title {
+            font-weight: 600;
+            color: #ffffff;
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+        }
+        .item-path {
+            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+            font-size: 0.8rem;
+            background-color: var(--code-bg);
+            color: var(--accent-blue);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+        .item-desc {
+            font-size: 0.86rem;
+            color: var(--text-secondary);
+            line-height: 1.45;
+        }
+        .item-desc ul {
+            list-style: none;
+            margin-top: 6px;
+        }
+        .item-desc li {
+            position: relative;
+            padding-left: 14px;
+            margin-bottom: 4px;
+        }
+        .item-desc li::before {
+            content: "\2022";
+            position: absolute;
+            left: 0;
+            color: var(--accent-blue);
+        }
+        .prompt-container {
+            position: relative;
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+        pre {
+            font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 0.84rem;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.5;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background-color: var(--accent-blue);
+            color: #0d1117;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+        }
+        .copy-btn:hover {
+            opacity: 0.88;
+        }
+        .copy-btn.copied {
+            background-color: var(--accent-green);
+            color: #ffffff;
+        }
+        footer {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-tag">Unity 2D | Handoff Tecnico</div>
+        <h1>Combo Knight</h1>
+        <p class="subtitle">Documento de referencia para desenvolvedores e agentes de IA continuarem o projeto. Contem a estrutura dos scripts, pontos de customizacao, dependencias e regras de desenvolvimento.</p>
+        <nav>
+            <a href="#scripts">Scripts</a>
+            <a href="#customizacao">Customizacao</a>
+            <a href="#dependencias">Dependencias</a>
+            <a href="#protocolo-ia">Protocolo IA</a>
+        </nav>
+    </header>
+
+    <main>
+        <section id="scripts">
+            <h2>Scripts do Projeto</h2>
+
+            <h3>Jogabilidade e Personagem</h3>
+            <div class="grid">
+                <div class="card">
+                    <div class="script-header">
+                        <span class="script-name">PlayerController.cs</span>
+                        <span class="script-badge">Core</span>
+                    </div>
+                    <div class="script-desc">Controla movimento, pulo, ataque automatico por proximidade, acionamento manual, troca de armas, combos e vidas. Durante o ataque, mantem a direcao travada e a escala do personagem fixada em +15%.</div>
+                </div>
+                <div class="card">
+                    <div class="script-header">
+                        <span class="script-name">BatEnemy.cs</span>
+                        <span class="script-badge">Inimigo</span>
+                    </div>
+                    <div class="script-desc">Inimigo voador com perseguicao aerea e oscilacao senoidal. Possui colisor vertical e recebe dano e pontuacao dobrados da Espada Real.</div>
+                </div>
+                <div class="card">
+                    <div class="script-header">
+                        <span class="script-name">SlimeEnemy.cs</span>
+                        <span class="script-badge">Inimigo</span>
+                    </div>
+                    <div class="script-desc">Inimigo terrestre com salto ritmico em direcao ao jogador. Recebe dano e pontuacao dobrados da Adaga Carmesim.</div>
+                </div>
+                <div class="card">
+                    <div class="script-header">
+                        <span class="script-name">Coin.cs</span>
+                        <span class="script-badge">Coletavel</span>
+                    </div>
+                    <div class="script-desc">Moeda gerada na eliminacao de inimigos. Possui atracao magnetica ao aproximar-se do jogador e concede pontuacao adicional.</div>
+                </div>
+                <div class="card">
+                    <div class="script-header">
+                        <span class="script-name">EnemySpawner.cs</span>
+                        <span class="script-badge">Gerador</span>
+                    </div>
+                    <div class="script-desc">Gerencia o surgimento e a densidade de Slimes e Morcegos nas laterais da arena com base no tempo e multiplicador de dificuldade.</div>
+                </div>
+            </div>
+
+            <h3>Combate e Feedback</h3>
+            <div class="grid">
+                <div class="card">
+                    <div class="script-header">
+                        <span class="script-name">HitFlash.cs</span>
+                        <span class="script-badge">Visual</span>
+                    </div>
+                    <div class="script-desc">Aplica temporariamente um material branco de alto brilho no SpriteRenderer durante o impacto de dano.</div>
+                </div>
+                <div class="card">
+                    <div class="script-header">
+                        <span class="script-name">VFXManager.cs</span>
+                        <span class="script-badge">Efeitos</span>
+                    </div>
+                    <div class="script-desc">Instancia particulas de poeira para pulo e queda com escala reduzida em 50%, faiscas de impacto, ondas de choque, arcos de corte e efeito de finalizacao de combo. Controla o hit-stop.</div>
+                </div>
+                <div class="card">
+                    <div class="script-header">
+                        <span class="script-name">FloatingText.cs</span>
+                        <span class="script-badge">Interface</span>
+                    </div>
+                    <div class="script-desc">Exibe valores flutuantes de pontuacao e acertos criticos com animacao de elevacao e desvanecimento suave.</div>
+                </div>
+                <div class="card">
+                    <div class="script-header">
+                        <span class="script-name">SimpleAudio.cs</span>
+                        <span class="script-badge">Audio</span>
+                    </div>
+                    <div class="script-desc">Gerencia a reproducao de efeitos sonoros e da musica de fundo em loop com controle de pitch e volume.</div>
+                </div>
+            </div>
+
+            <h3>Interface, Camera e Sistema</h3>
+            <div class="grid">
+                <div class="card">
+                    <div class="script-header">
+                        <span class="script-name">GameManager.cs</span>
+                        <span class="script-badge">Sistema</span>
+                    </div>
+                    <div class="script-desc">Coordena o ciclo de partida, pontuacao, recordes, contagem de combos, vidas, temporizador e telas de inicio, pausa e fim de jogo. Desativa logs em execucao via Debug.unityLogger.</div>
+                </div>
+                <div class="card">
+                    <div class="script-header">
+                        <span class="script-name">MobileTouchController.cs</span>
+                        <span class="script-badge">Entrada</span>
+                    </div>
+                    <div class="script-desc">Processa toques na tela mobile, convertendo gestos direcionais em movimentacao, toque simples e duplo em acoes de ataque e deslizamento vertical em pulo.</div>
+                </div>
+                <div class="card">
+                    <div class="script-header">
+                        <span class="script-name">VirtualButton.cs</span>
+                        <span class="script-badge">Interface</span>
+                    </div>
+                    <div class="script-desc">Componente visual de botao para touchscreen com animacao reativa de escala ao toque.</div>
+                </div>
+                <div class="card">
+                    <div class="script-header">
+                        <span class="script-name">ResponsiveCamera.cs</span>
+                        <span class="script-badge">Camera</span>
+                    </div>
+                    <div class="script-desc">Ajusta o tamanho ortografico da camera 2D dinamicamente para preservar o enquadramento em dispositivos moveis e monitores desktop.</div>
+                </div>
+            </div>
+
+            <h3>Ferramentas de Editor</h3>
+            <div class="grid">
+                <div class="card">
+                    <div class="script-header">
+                        <span class="script-name">QATestHarness.cs</span>
+                        <span class="script-badge">Editor</span>
+                    </div>
+                    <div class="script-desc">Janela de utilitarios no menu Window do Unity Editor para validacao estatica da cena, componentes e configuracoes do projeto.</div>
+                </div>
+                <div class="card">
+                    <div class="script-header">
+                        <span class="script-name">SceneSetupBuilder.cs</span>
+                        <span class="script-badge">Editor</span>
+                    </div>
+                    <div class="script-desc">Rotina de automacao para montagem e vinculacao dos GameObjects da cena principal.</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="customizacao">
+            <h2>Pontos de Customizacao</h2>
+
+            <div class="item-box">
+                <div class="item-title">Imagens e Sprites</div>
+                <div class="item-path">Assets/Sprites/</div>
+                <div class="item-desc">
+                    Para substituir texturas, insira novos arquivos PNG mantendo a nomenclatura original ou reatribua o campo Sprite no SpriteRenderer ou componente Image do objeto:
+                    <ul>
+                        <li><b>Personagem:</b> knight_idle_broadsword.png, knight_broadsword.png, knight_idle_dagger.png, knight_dagger.png.</li>
+                        <li><b>Inimigos:</b> slime_idle.png, slime_hop.png, bat_fly_up.png, bat_fly_down.png.</li>
+                        <li><b>Interface e Fundo:</b> background_arena.png, background_arena_portrait.png, botoes ui_btn_*.png, coracoes heart_full.png e heart_empty.png.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="item-box">
+                <div class="item-title">Animacoes e Comportamento</div>
+                <div class="item-path">Assets/Scripts/ (PlayerController.cs, SlimeEnemy.cs, BatEnemy.cs)</div>
+                <div class="item-desc">
+                    As animacoes sao baseadas em troca procedural de sprites e deformacoes de escala via DOTween:
+                    <ul>
+                        <li><b>Tempos de ataque:</b> attackDuration no PlayerController.</li>
+                        <li><b>Movimentacao de inimigos:</b> hopSpeed e hopHeight no SlimeEnemy; speed, waveAmplitude e waveFrequency no BatEnemy.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="item-box">
+                <div class="item-title">Efeitos Visuais (VFX)</div>
+                <div class="item-path">Assets/Sprites/VFX/ e GameObject VFXManager na cena</div>
+                <div class="item-desc">
+                    Efeitos visuais utilizam sprites dedicados associados a tweens de escala e opacidade:
+                    <ul>
+                        <li><b>Poeira:</b> vfx_dust_puff.png (configurada com 50% da escala padrao no VFXManager).</li>
+                        <li><b>Cortes e Impactos:</b> vfx_slash_arc_broadsword.png, vfx_slash_arc_dagger.png, vfx_hit_spark.png, vfx_shockwave_ring.png, vfx_combo_burst.png.</li>
+                        <li><b>Propriedades:</b> duracao de hit-stop, intensidade de trepidação e taxas de emissao sao ajustadas no componente VFXManager na cena.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="item-box">
+                <div class="item-title">Audio</div>
+                <div class="item-path">Assets/Audio/ e GameObject AudioManager na cena</div>
+                <div class="item-desc">
+                    Trilha sonora e efeitos sonoros:
+                    <ul>
+                        <li><b>Musica:</b> bgm_quest_arena.mp3, 8-Bit Quest Arena.mp3.</li>
+                        <li><b>Efeitos:</b> slash.wav, combo.wav, hurt.wav, kill.wav, kill_bat.wav, coin.wav, jump.wav, swap.wav.</li>
+                        <li><b>Substituicao:</b> substitua os arquivos na pasta ou atribua os novos AudioClips aos campos do componente SimpleAudio na cena.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="dependencias">
+            <h2>Dependencias</h2>
+
+            <div class="item-box">
+                <div class="item-title">DOTween (Demigiant)</div>
+                <div class="item-path">Assets/Plugins/Demigiant/DOTween/</div>
+                <div class="item-desc">
+                    Biblioteca de animacoes e tweens utilizada para transicoes de interface, hit flash, resposta de impacto, trepidação de camera e deformacoes procedurais. Caso o projeto seja aberto pela primeira vez em um novo ambiente, acesse Tools > Demigiant > DOTween Utility Panel e execute Setup DOTween.
+                </div>
+            </div>
+
+            <div class="item-box">
+                <div class="item-title">Unity MCP Anklebreaker</div>
+                <div class="item-desc">
+                    Plugin de comunicacao MCP integrado ao Unity Editor. Utilizado por assistentes e agentes para inspecionar a hierarquia da cena, consultar logs de console, validar compilacao e executar testes automatizados no editor.
+                </div>
+            </div>
+        </section>
+
+        <section id="protocolo-ia">
+            <h2>Protocolo de Desenvolvimento para IA</h2>
+            <div class="item-desc">Utilize o protocolo abaixo ao instruir agentes de IA que forem atuar no projeto:</div>
+
+            <div class="prompt-container">
+                <button class="copy-btn" onclick="copyProtocol()">Copiar Protocolo</button>
+                <pre id="ia-protocol">Voce e um especialista em desenvolvimento de jogos na Unity e esta assumindo o desenvolvimento de Combo Knight (versao Unity 6000.3.10f1).
+
+CONTEXTO DO PROJETO E ARQUITETURA:
+- Visao Geral: Jogo 2D de acao arcade em pixel art focado em combate fluido, cadeia de combos e sobrevivencia em arena fechada, projetado prioritariamente para mobile vertical (Portrait) com suporte completo a desktop.
+- Cenario e Limites: Arena delimitada pelos colisores Ground, WallLeft e WallRight. A ResponsiveCamera.cs recalcula o tamanho ortografico dinamicamente para preservar o enquadramento em qualquer proporção de tela.
+- Jogador (PlayerController.cs):
+  * Controla o cavaleiro com 5 coracoes de vida. Ao sofrer dano, perde vida, sofre recuo (knockback), entra em invulnerabilidade temporaria piscante e aciona trepidacao de tela. Se a vida zera, aciona o GameOver no GameManager.cs.
+  * Escala do personagem fixada em Vector3(2.53f, 2.53f, 1f) (+15% do tamanho original), com redefinicao automatica apos animacoes para evitar encolhimento.
+  * Ataque automatico ativado por proximidade contra inimigos a frente/proximos, com suporte conjunto a acionamento manual por tecla ou toque.
+  * Direcao travada durante o ataque: o metodo Flip e bloqueado enquanto o ataque estiver ativo, impedindo que o cavaleiro mude de lado no meio do golpe.
+  * Poeira de pulo e aterrissagem (vfx_dust_puff) reduzida em 50% na escala para manter a tela limpa.
+- Sistema de Armas e Sinergias:
+  * Lamina Real (Broadsword): ataque cortante com colisor vertical ampliado (0.55 x 0.75). Causa dano e pontuacao dobrados contra Morcegos.
+  * Adaga Carmesim (Dagger): estocada frontal agil que concede +25% de velocidade de corrida, +15% de forca de pulo e bonus de drop de moedas. Causa dano e pontuacao dobrados contra Slimes.
+- Inimigos e Spawner:
+  * Slime (SlimeEnemy.cs): terrestre, avanca por saltos ritmicos em direcao ao jogador. Vulneravel a Adaga.
+  * Morcego (BatEnemy.cs): aereo, voa em padrao senoidal continuo de onda. Vulneravel a Espada.
+  * EnemySpawner.cs: instancia Slimes e Morcegos nas bordas laterais respeitando intervalos dinâmicos baseados no multiplicador de dificuldade do GameManager.
+- Coletaveis e Combos:
+  * Moedas (Coin.cs): surgem da eliminacao de inimigos com atracao magnetica em direcao ao jogador ao aproximar-se, somando moedas e pontuacao.
+  * Sistema de Combo: cada abate consecutivo incrementa o multiplicador de pontuacao, renova a barra de tempo do combo, eleva o pitch do som e aumenta a intensidade do screen shake. Atingir combos altos ou acertos criticos dispara hit-stop (micropausa de milissegundos), onda de choque e burst radial de particulas via VFXManager.cs.
+- Efeitos e Feedback (Juice):
+  * HitFlash.cs aplica material branco brilhante temporario no SpriteRenderer ao sofrer impacto.
+  * FloatingText.cs instancia numeros flutuantes de dano e pontuacao com elevacao e fade suave.
+  * VFXManager.cs centraliza poeira, faiscas, ondas de choque, arcos de lamina e hit-stop.
+  * SimpleAudio.cs reproduz a trilha em loop e efeitos sonoros com ajuste de pitch procedural.
+- Interface e Controles:
+  * MobileTouchController.cs e VirtualButton.cs gerenciam botoes em tela (mover, pular, trocar arma, pausar) e gestos de arrasto vertical para pulo e duplo toque para ataque.
+  * HUD exibe coracoes, pontuacao formatada, moedas, arma ativa e medidor dinamico de combo.
+  * Debug.unityLogger desativado em execucao no Awake do GameManager.cs para build limpa.
+
+DEPENDENCIAS OBRIGATORIAS:
+- DOTween em Assets/Plugins/Demigiant/DOTween/ (utilizado para tweens de interface, deformacoes de sprite, trepidacao de camera e hit-stop).
+- Unity MCP Anklebreaker (utilizado para inspecao e validacao automatizada pelo Unity Editor).
+
+REGRAS DE DESENVOLVIMENTO:
+1. Codigo sem comentarios: nenhum arquivo C# no projeto pode conter comentarios (//, /* */ ou ///). Remova qualquer comentario criado durante alteracoes.
+2. Simplicidade e YAGNI: prefira alteracoes pequenas, diretas e cirurgicas. Reutilize componentes e sistemas existentes antes de propor novas arquiteturas.
+3. Preservacao de comportamento: mantenha rigorosamente a sensacao de jogo (game feel), sinergias de armas, escala travada do personagem e responsividade dos controles.
+4. Validacao com Unity MCP: apos cada edicao de codigo, utilize as ferramentas do Unity MCP para verificar erros de compilacao e inspecionar os logs do console. So considere a tarefa concluida apos validar o comportamento no Unity.
+
+ORDEM DE PRIORIDADES:
+1. Preservar o comportamento e as mecanicas existentes.
+2. Implementar com precisao cirurgica o que foi solicitado.
+3. Manter o codigo simples e sem comentarios.
+4. Validar o resultado no Unity Editor.
+
+Antes de iniciar qualquer edicao, inspecione o projeto e identifique os arquivos e componentes diretamente envolvidos na tarefa.</pre>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        Combo Knight | Documento Tecnico Autocontido
+    </footer>
+
+    <script>
+        function copyProtocol() {
+            const text = document.getElementById('ia-protocol').innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.innerText = 'Copiado';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.innerText = 'Copiar Protocolo';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
+
