@@ -225,7 +225,7 @@ public class RuntimeQARunner : MonoBehaviour
 
         if (spawner != null) spawner.enabled = true;
 
-        int initialHearts = player.CurrentHearts;
+        float initialHearts = player.CurrentHearts;
         player.TakeDamage(1, player.transform.position + Vector3.right);
         bool damagedOk = player.CurrentHearts == initialHearts - 1;
         bool invulnerableOk = player.IsInvulnerable;
@@ -260,7 +260,7 @@ public class RuntimeQARunner : MonoBehaviour
         gm.TogglePause();
         yield return new WaitForSecondsRealtime(0.2f);
 
-        player.TakeDamage(player.CurrentHearts, player.transform.position + Vector3.right);
+        player.TakeDamage(Mathf.CeilToInt(player.CurrentHearts), player.transform.position + Vector3.right);
         yield return new WaitForSecondsRealtime(0.5f);
 
         var gameOverPanel = GameObject.Find("GameOverPanel");

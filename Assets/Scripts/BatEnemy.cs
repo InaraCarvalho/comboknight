@@ -7,6 +7,7 @@ public class BatEnemy : MonoBehaviour
     [SerializeField] private float waveAmplitude = 0.9f;
     [SerializeField] private float waveFrequency = 3.5f;
     [SerializeField] private int scoreValue = 160;
+    [SerializeField] private int xpValue = 18;
     [SerializeField] private Sprite flyUpSprite;
     [SerializeField] private Sprite flyDownSprite;
 
@@ -30,6 +31,18 @@ public class BatEnemy : MonoBehaviour
         var wr = GameObject.Find("WallRight")?.GetComponent<Collider2D>();
         if (col != null && wl != null) Physics2D.IgnoreCollision(col, wl, true);
         if (col != null && wr != null) Physics2D.IgnoreCollision(col, wr, true);
+
+        // (Removido empurrao fisico) cavaleiro NAO empurra mais os inimigos:
+        // ignora a colisao entre o corpo dele e o corpo deste inimigo.
+        // O dano do inimigo no cavaleiro agora vem da hurtbox (OnTriggerStay2D).
+        var playerGO = GameObject.FindGameObjectWithTag("Player");
+        if (playerGO != null)
+        {
+            foreach (var pc in playerGO.GetComponents<Collider2D>())
+            {
+                if (pc != null && !pc.isTrigger && col != null) Physics2D.IgnoreCollision(pc, col, true);
+            }
+        }
         
         Vector3 s = transform.localScale;
         s.x = Mathf.Abs(s.x) * direction;
@@ -44,7 +57,7 @@ public class BatEnemy : MonoBehaviour
     {
         if (isDead) return;
 
-        transform.position += new Vector3(direction * speed * Time.deltaTime, 0f, 0f);
+        transform.position += new Vector3(direction * speed * GetSpeedScale() * Time.deltaTime, 0f, 0f);
         waveTimer += Time.deltaTime * waveFrequency;
         transform.position = new Vector3(transform.position.x, baseY + Mathf.Sin(waveTimer) * waveAmplitude, transform.position.z);
 
@@ -53,8 +66,15 @@ public class BatEnemy : MonoBehaviour
             sr.sprite = (Mathf.Cos(waveTimer) > 0f) ? flyUpSprite : flyDownSprite;
         }
 
-        if (transform.position.x < -4.6f) { direction = 1; InvertScale(); }
-        else if (transform.position.x > 4.6f) { direction = -1; InvertScale(); }
+        if (transform.position.x < -6.5f) { direction = 1; InvertScale(); }
+        else if (transform.position.x > 6.5f) { direction = -1; InvertScale(); }
+    }
+
+    // Fica mais rapido conforme a dificuldade (nivel do jogador) aumenta.
+    private float GetSpeedScale()
+    {
+        float diff = (GameManager.Instance != null) ? GameManager.Instance.DifficultyMultiplier : 1f;
+        return Mathf.Min(2.5f, 1f + (diff - 1f) * 0.55f);
     }
 
     private void InvertScale()
@@ -88,6 +108,11 @@ public class BatEnemy : MonoBehaviour
         isDead = true;
         transform.DOKill();
 
+        // (Corrige dano pos-morte) desliga o collider na hora: inimigo morto
+        // nao continua tocando a hurtbox e nao prejudica o cavaleiro.
+        var col = GetComponent<Collider2D>();
+        if (col != null) col.enabled = false;
+
         VFXManager.Instance?.HitStop(0.045f);
         VFXManager.Instance?.SpawnHitSpark(transform.position);
         VFXManager.Instance?.SpawnBatPoof(transform.position);
@@ -97,6 +122,7 @@ public class BatEnemy : MonoBehaviour
         transform.DOScale(Vector3.zero, 0.08f).OnComplete(() =>
         {
             GameManager.Instance?.RegisterKill(scoreValue, transform.position, isBat: true);
+            GameManager.Instance?.AddXp(xpValue);
             Destroy(gameObject);
         });
     }

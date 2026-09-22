@@ -10,6 +10,13 @@
 /[Rr]ecordings/
 .utmp/
 
+# Build artifacts and editor recovery
+*.apk
+/*_BurstDebugInformation_DoNotShip/
+/*_BackUpThisFolder_ButDontShipItWithYourGame/
+/Assets/_Recovery/
+/Assets/_Recovery.meta
+
 # IDE and project files
 .vs/
 .idea/

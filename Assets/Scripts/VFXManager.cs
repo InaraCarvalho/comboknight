@@ -30,9 +30,16 @@ public class VFXManager : MonoBehaviour
         Time.timeScale = 0f;
         hitStopTween = DOVirtual.DelayedCall(duration, () =>
         {
-            if (GameManager.Instance != null && GameManager.Instance.IsGameActive && !GameManager.Instance.IsPaused)
+            if (GameManager.Instance != null && GameManager.Instance.IsGameActive && !GameManager.Instance.IsPaused && !GameManager.Instance.IsShopOpen)
                 Time.timeScale = 1f;
         }).SetUpdate(true);
+    }
+
+    // Cancela um HitStop pendente sem mexer no time scale (usado ao abrir o mercador).
+    public void CancelHitStop()
+    {
+        hitStopTween?.Kill();
+        hitStopTween = null;
     }
 
     public void SpawnHitSpark(Vector3 position)

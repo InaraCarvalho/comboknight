@@ -7,6 +7,7 @@ public class SlimeEnemy : MonoBehaviour
     [SerializeField] private float hopHeight = 0.45f;
     [SerializeField] private float hopSpeed = 6f;
     [SerializeField] private int scoreValue = 100;
+    [SerializeField] private int xpValue = 12;
     [SerializeField] private Sprite idleSprite;
     [SerializeField] private Sprite hopSprite;
 
@@ -32,6 +33,18 @@ public class SlimeEnemy : MonoBehaviour
         if (col != null && wl != null) Physics2D.IgnoreCollision(col, wl, true);
         if (col != null && wr != null) Physics2D.IgnoreCollision(col, wr, true);
 
+        // (Removido empurrao fisico) cavaleiro NAO empurra mais os inimigos:
+        // ignora a colisao entre o corpo dele e o corpo deste inimigo.
+        // O dano do inimigo no cavaleiro agora vem da hurtbox (OnTriggerStay2D).
+        var playerGO = GameObject.FindGameObjectWithTag("Player");
+        if (playerGO != null)
+        {
+            foreach (var pc in playerGO.GetComponents<Collider2D>())
+            {
+                if (pc != null && !pc.isTrigger && col != null) Physics2D.IgnoreCollision(pc, col, true);
+            }
+        }
+
         Vector3 s = transform.localScale;
         transform.DOScale(new Vector3(s.x * 1.15f, s.y * 0.85f, 1f), 0.35f)
             .SetLoops(-1, LoopType.Yoyo)
@@ -55,8 +68,15 @@ public class SlimeEnemy : MonoBehaviour
             sr.sprite = (hop > 0.25f) ? hopSprite : idleSprite;
         }
 
-        transform.position += new Vector3(direction * baseSpeed * (0.5f + hop * 0.8f) * Time.deltaTime, 0f, 0f);
+        transform.position += new Vector3(direction * baseSpeed * (0.5f + hop * 0.8f) * GetSpeedScale() * Time.deltaTime, 0f, 0f);
         transform.position = new Vector3(transform.position.x, startPos.y + hop * hopHeight, transform.position.z);
+    }
+
+    // Fica mais rapido conforme a dificuldade (nivel do jogador) aumenta.
+    private float GetSpeedScale()
+    {
+        float diff = (GameManager.Instance != null) ? GameManager.Instance.DifficultyMultiplier : 1f;
+        return Mathf.Min(2.5f, 1f + (diff - 1f) * 0.55f);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -83,6 +103,11 @@ public class SlimeEnemy : MonoBehaviour
         isDead = true;
         transform.DOKill();
 
+        // (Corrige dano pos-morte) desliga o collider na hora: inimigo morto
+        // nao continua tocando a hurtbox e nao prejudica o cavaleiro.
+        var col = GetComponent<Collider2D>();
+        if (col != null) col.enabled = false;
+
         VFXManager.Instance?.HitStop(0.045f);
         VFXManager.Instance?.SpawnHitSpark(transform.position);
         VFXManager.Instance?.SpawnSlimeSplat(transform.position);
@@ -93,6 +118,7 @@ public class SlimeEnemy : MonoBehaviour
         transform.DOScale(new Vector3(ds.x * 1.35f, ds.y * 0.2f, 1f), 0.08f).OnComplete(() =>
         {
             GameManager.Instance?.RegisterKill(scoreValue, transform.position, isBat: false);
+            GameManager.Instance?.AddXp(xpValue);
             Destroy(gameObject);
         });
     }

@@ -330,7 +330,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: -24, y: 28}
-  m_SizeDelta: {x: 250, y: 110}
+  m_SizeDelta: {x: 280, y: 130}
   m_Pivot: {x: 1, y: 0}
 --- !u!114 &33441464
 MonoBehaviour:
@@ -406,7 +406,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
   m_AnchoredPosition: {x: 10, y: 0}
-  m_SizeDelta: {x: 90, y: 90}
+  m_SizeDelta: {x: 108, y: 108}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &82583419
 MonoBehaviour:
@@ -643,7 +643,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c7551f9e7583294db839ac93b2150be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
-  comboDuration: 3.2
+  comboDuration: 4
   coinPrefab: {fileID: 958851198176459198, guid: 7022d4307c78c5141ab74aff80ad75d4, type: 3}
   floatingTextPrefab: {fileID: 1091404444679284137, guid: d1833a118aee31347bac0ba6fdfb13f7, type: 3}
   heartIcons:
@@ -652,8 +652,6 @@ MonoBehaviour:
   - {fileID: 1913386315}
   - {fileID: 1883803104}
   - {fileID: 1083996044}
-  heartFullSprite: {fileID: 21300000, guid: afc0d82e5312318449fc90d172881f28, type: 3}
-  heartEmptySprite: {fileID: 21300000, guid: 2bbe5eb63cccb0e4a9cca5a3a4cdb3c8, type: 3}
   scoreText: {fileID: 1706885054}
   coinsText: {fileID: 1403174315}
   comboText: {fileID: 1056737073}
@@ -797,7 +795,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 24, y: 28}
-  m_SizeDelta: {x: 230, y: 110}
+  m_SizeDelta: {x: 280, y: 130}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &257823943
 MonoBehaviour:
@@ -1837,8 +1835,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -20, y: -22}
-  m_SizeDelta: {x: 50, y: 50}
+  m_AnchoredPosition: {x: -56, y: -20}
+  m_SizeDelta: {x: 58, y: 58}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &599085403
 MonoBehaviour:
@@ -1926,6 +1924,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   baseSpeed: 6.5
   baseJumpForce: 13.5
+  jumpBufferTime: 0.12
+  coyoteTime: 0.12
   groundCheck: {fileID: 715712031}
   groundLayer:
     serializedVersion: 2
@@ -1945,6 +1945,7 @@ MonoBehaviour:
   autoAttackRangeDagger: 1.5
   autoAttackCooldownBroadsword: 0.28
   autoAttackCooldownDagger: 0.18
+  autoTurnX: 6.5
 --- !u!4 &604121086
 Transform:
   m_ObjectHideFlags: 0
@@ -2170,7 +2171,7 @@ Transform:
   m_GameObject: {fileID: 605115423}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.75, y: 0, z: 0}
+  m_LocalPosition: {x: 7.3, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2440,7 +2441,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
   m_AnchoredPosition: {x: -10, y: 0}
-  m_SizeDelta: {x: 90, y: 90}
+  m_SizeDelta: {x: 108, y: 108}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!114 &667930396
 MonoBehaviour:
@@ -2787,7 +2788,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
   m_AnchoredPosition: {x: -10, y: 0}
-  m_SizeDelta: {x: 130, y: 95}
+  m_SizeDelta: {x: 150, y: 108}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!114 &849491040
 MonoBehaviour:
@@ -3356,9 +3357,9 @@ MonoBehaviour:
   m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 720, y: 1280}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 1
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -3557,7 +3558,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ResponsiveCamera
   targetHalfWidth: 3.95
   minOrthoSize: 7
+  landscapeTargetHalfWidth: 5
+  landscapeMinOrthoSize: 4.3
   backgroundTransform: {fileID: 293909702}
+  backgroundSpriteWidth: 6.4
+  backgroundSpriteHeight: 3.6
+  landscapeBackgroundOverScale: 1.15
+  landscapeBackgroundY: -0.75
 --- !u!81 &1067170633
 AudioListener:
   m_ObjectHideFlags: 0
@@ -4088,7 +4095,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
   m_AnchoredPosition: {x: 10, y: 0}
-  m_SizeDelta: {x: 85, y: 85}
+  m_SizeDelta: {x: 104, y: 104}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &1122580997
 MonoBehaviour:
@@ -4173,9 +4180,12 @@ MonoBehaviour:
   slimePrefab: {fileID: 7410804194121808156, guid: e2131517f0721e64c9192e4f7c64c383, type: 3}
   batPrefab: {fileID: 1180228076361372474, guid: d20293e0b0f7bbf479241da87a5442fb, type: 3}
   groundSpawnY: -3.95
+  minSpawnX: -6.2
+  maxSpawnX: 6.2
   minBatY: -2
-  maxBatY: 2.5
-  spawnDistanceX: 4.3
+  maxBatY: -0.5
+  minDistanceFromPlayer: 2.4
+  warningDuration: 0.9
 --- !u!4 &1131875204
 Transform:
   m_ObjectHideFlags: 0
@@ -4537,7 +4547,7 @@ Transform:
   m_GameObject: {fileID: 1231347349}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.75, y: 0, z: 0}
+  m_LocalPosition: {x: -7.3, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

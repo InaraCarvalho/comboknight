@@ -22,7 +22,6 @@ public static class SceneSetupBuilder
         Sprite batFlyDownSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/bat_fly_down.png");
         Sprite coinGoldSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/coin_gold.png");
         Sprite heartFullSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/heart_full.png");
-        Sprite heartEmptySprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/heart_empty.png");
         Sprite bgPortraitSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/background_arena_portrait.png");
         Sprite btnLeftSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/ui_btn_left.png");
         Sprite btnRightSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/ui_btn_right.png");
@@ -117,7 +116,7 @@ public static class SceneSetupBuilder
         batRb.gravityScale = 0f;
         batRb.constraints = RigidbodyConstraints2D.FreezeRotation;
         var batCol = batObj.AddComponent<CircleCollider2D>();
-        batCol.radius = 0.22f;
+        batCol.radius = 0.15f;
         var batComp = batObj.AddComponent<BatEnemy>();
         var batSerialized = new SerializedObject(batComp);
         batSerialized.FindProperty("flyUpSprite").objectReferenceValue = batFlyUpSprite;
@@ -350,8 +349,8 @@ public static class SceneSetupBuilder
         pbRt.anchorMin = new Vector2(1f, 1f);
         pbRt.anchorMax = new Vector2(1f, 1f);
         pbRt.pivot = new Vector2(1f, 1f);
-        pbRt.anchoredPosition = new Vector2(-20f, -22f);
-        pbRt.sizeDelta = new Vector2(50f, 50f);
+        pbRt.anchoredPosition = new Vector2(-56f, -20f);
+        pbRt.sizeDelta = new Vector2(58f, 58f);
         var pbImg = pauseBtnObj.AddComponent<Image>();
         pbImg.sprite = btnPauseSprite;
         var vbPause = pauseBtnObj.AddComponent<VirtualButton>();
@@ -506,7 +505,7 @@ public static class SceneSetupBuilder
         lcRt.anchorMax = new Vector2(0f, 0f);
         lcRt.pivot = new Vector2(0f, 0f);
         lcRt.anchoredPosition = new Vector2(24f, 28f);
-        lcRt.sizeDelta = new Vector2(230f, 110f);
+        lcRt.sizeDelta = new Vector2(280f, 130f);
         var lcBg = leftCluster.AddComponent<Image>();
         lcBg.sprite = clusterBgSprite;
         lcBg.type = Image.Type.Sliced;
@@ -518,7 +517,7 @@ public static class SceneSetupBuilder
         blRt.anchorMax = new Vector2(0f, 0.5f);
         blRt.pivot = new Vector2(0f, 0.5f);
         blRt.anchoredPosition = new Vector2(10f, 0f);
-        blRt.sizeDelta = new Vector2(90f, 90f);
+        blRt.sizeDelta = new Vector2(108f, 108f);
         var blImg = btnLeftObj.AddComponent<Image>();
         blImg.sprite = btnLeftSprite;
         var blVb = btnLeftObj.AddComponent<VirtualButton>();
@@ -533,7 +532,7 @@ public static class SceneSetupBuilder
         brRt.anchorMax = new Vector2(1f, 0.5f);
         brRt.pivot = new Vector2(1f, 0.5f);
         brRt.anchoredPosition = new Vector2(-10f, 0f);
-        brRt.sizeDelta = new Vector2(90f, 90f);
+        brRt.sizeDelta = new Vector2(108f, 108f);
         var brImg = btnRightObj.AddComponent<Image>();
         brImg.sprite = btnRightSprite;
         var brVb = btnRightObj.AddComponent<VirtualButton>();
@@ -548,7 +547,7 @@ public static class SceneSetupBuilder
         rcRt.anchorMax = new Vector2(1f, 0f);
         rcRt.pivot = new Vector2(1f, 0f);
         rcRt.anchoredPosition = new Vector2(-24f, 28f);
-        rcRt.sizeDelta = new Vector2(250f, 110f);
+        rcRt.sizeDelta = new Vector2(280f, 130f);
         var rcBg = rightCluster.AddComponent<Image>();
         rcBg.sprite = clusterBgSprite;
         rcBg.type = Image.Type.Sliced;
@@ -560,7 +559,7 @@ public static class SceneSetupBuilder
         bsRt.anchorMax = new Vector2(0f, 0.5f);
         bsRt.pivot = new Vector2(0f, 0.5f);
         bsRt.anchoredPosition = new Vector2(10f, 0f);
-        bsRt.sizeDelta = new Vector2(85f, 85f);
+        bsRt.sizeDelta = new Vector2(104f, 104f);
         var bsImg = btnSwapObj.AddComponent<Image>();
         bsImg.sprite = btnSwapSprite;
         var bsVb = btnSwapObj.AddComponent<VirtualButton>();
@@ -575,7 +574,7 @@ public static class SceneSetupBuilder
         bjRt.anchorMax = new Vector2(1f, 0.5f);
         bjRt.pivot = new Vector2(1f, 0.5f);
         bjRt.anchoredPosition = new Vector2(-10f, 0f);
-        bjRt.sizeDelta = new Vector2(130f, 95f);
+        bjRt.sizeDelta = new Vector2(150f, 108f);
         var bjImg = btnJumpObj.AddComponent<Image>();
         bjImg.sprite = btnJumpSprite;
         var bjVb = btnJumpObj.AddComponent<VirtualButton>();
@@ -654,8 +653,6 @@ public static class SceneSetupBuilder
         var hiProp = gmSerialized.FindProperty("heartIcons");
         hiProp.arraySize = 5;
         for (int i = 0; i < 5; i++) hiProp.GetArrayElementAtIndex(i).objectReferenceValue = heartImages[i];
-        gmSerialized.FindProperty("heartFullSprite").objectReferenceValue = heartFullSprite;
-        gmSerialized.FindProperty("heartEmptySprite").objectReferenceValue = heartEmptySprite;
         gmSerialized.FindProperty("scoreText").objectReferenceValue = scoreTmp;
         gmSerialized.FindProperty("coinsText").objectReferenceValue = coinsTmp;
         gmSerialized.FindProperty("comboText").objectReferenceValue = comboTmp;

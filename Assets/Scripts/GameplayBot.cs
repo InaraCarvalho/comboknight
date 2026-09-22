@@ -5,6 +5,8 @@ using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
 
+// Ferramenta de teste automatizado do Editor; nao entra no build do APK.
+#if UNITY_EDITOR
 public class GameplayBot : MonoBehaviour
 {
     public static GameplayBot Instance { get; private set; }
@@ -427,3 +429,4 @@ public class GameplayBot : MonoBehaviour
         ReleaseMovement();
     }
 }
+#endif
