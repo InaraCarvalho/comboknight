@@ -67,6 +67,14 @@ public class ShooterEnemy : MonoBehaviour
     {
         if (isDead) return;
 
+        var player = GameObject.FindGameObjectWithTag("Player")?.transform;
+        if (player != null && sr != null && !isDead)
+        {
+            // Vira o sprite para a direcao do jogador (esquerda/direita).
+            float dx = player.position.x - transform.position.x;
+            sr.flipX = dx < 0f;
+        }
+
         timer += Time.deltaTime;
 
         if (shootSpriteTimer > 0f)
@@ -117,6 +125,8 @@ public class ShooterEnemy : MonoBehaviour
         float dx = (player != null) ? player.position.x - transform.position.x : -transform.position.x;
         if (Mathf.Abs(dx) < 0.05f) dir = (transform.position.x >= 0f) ? -1 : 1;
         else dir = dx > 0f ? 1 : -1;
+
+        if (sr != null) sr.flipX = dir < 0f;
 
         var go = Instantiate(projectilePrefab, transform.position + Vector3.right * dir * 0.45f, Quaternion.identity);
         go.hideFlags = HideFlags.None;

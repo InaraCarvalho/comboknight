@@ -46,7 +46,7 @@ public class PlayerController : MonoBehaviour
     // Apos comprar uma arma no mercador, o jogador fica preso nela (nao troca).
     private bool weaponLocked;
 
-    [SerializeField] private Vector3 baseScale = new Vector3(2.53f, 2.53f, 1f);
+    [SerializeField] private Vector3 baseScale = new Vector3(1.25f, 1.25f, 1f);
     [SerializeField] private float autoAttackRangeBroadsword = 1.9f;
     [SerializeField] private float autoAttackRangeDagger = 1.5f;
     [SerializeField] private float autoAttackCooldownBroadsword = 0.28f;
@@ -106,7 +106,7 @@ public class PlayerController : MonoBehaviour
         hurtBoxCollider.isTrigger = true;
         hurtBoxCollider.radius = 0.35f;
 
-        baseScale = new Vector3(2.53f, 2.53f, 1f);
+        baseScale = new Vector3(1.25f, 1.25f, 1f);
         ResetScale();
         ApplyWeaponStats();
     }

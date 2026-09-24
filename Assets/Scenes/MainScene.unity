@@ -2206,7 +2206,7 @@ MonoBehaviour:
   daggerIdleSprite: {fileID: -4088403802575277114, guid: 329e8e86b9b7bf8469d5ef577f41b6ca, type: 3}
   attackDuration: 0.16
   maxHearts: 5
-  baseScale: {x: 2.53, y: 2.53, z: 1}
+  baseScale: {x: 1.25, y: 1.25, z: 1}
   autoAttackRangeBroadsword: 1.9
   autoAttackRangeDagger: 1.5
   autoAttackCooldownBroadsword: 0.28
@@ -2221,8 +2221,8 @@ Transform:
   m_GameObject: {fileID: 604121084}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -3.80425, z: 0}
-  m_LocalScale: {x: 2.53, y: 2.53, z: 1}
+  m_LocalPosition: {x: 0, y: -4.15625, z: 0}
+  m_LocalScale: {x: 1.25, y: 1.25, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 715712031}
@@ -3054,7 +3054,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
   m_AnchoredPosition: {x: -18, y: 0}
-  m_SizeDelta: {x: 176, y: 118}
+  m_SizeDelta: {x: 160, y: 160}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!114 &849491040
 MonoBehaviour:

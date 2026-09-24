@@ -206,8 +206,8 @@ public static class SceneSetupBuilder
         playerObj.tag = "Player";
         // Spawn exatamente com os pes na superficie do chao (topo do solo em
         // -4.5) para o cavaleiro nao "cair" nem afundar no primeiro frame.
-        playerObj.transform.position = new Vector3(0f, -3.80425f, 0f);
-        playerObj.transform.localScale = new Vector3(2.53f, 2.53f, 1f);
+        playerObj.transform.position = new Vector3(0f, -4.15625f, 0f);
+        playerObj.transform.localScale = new Vector3(1.25f, 1.25f, 1f);
         var playerRb = playerObj.AddComponent<Rigidbody2D>();
         playerRb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
         playerRb.interpolation = RigidbodyInterpolation2D.Interpolate;
@@ -587,7 +587,7 @@ public static class SceneSetupBuilder
         bjRt.anchorMax = new Vector2(1f, 0.5f);
         bjRt.pivot = new Vector2(1f, 0.5f);
         bjRt.anchoredPosition = new Vector2(-18f, 0f);
-        bjRt.sizeDelta = new Vector2(176f, 118f);
+        bjRt.sizeDelta = new Vector2(160f, 160f);
         var bjImg = btnJumpObj.AddComponent<Image>();
         bjImg.sprite = btnJumpSprite;
         var bjVb = btnJumpObj.AddComponent<VirtualButton>();

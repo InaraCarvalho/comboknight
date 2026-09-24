@@ -60,6 +60,9 @@ public class SlimeEnemy : MonoBehaviour
             direction = (player.position.x > transform.position.x) ? 1 : -1;
         }
 
+        // Vira o sprite para a direcao do movimento (esquerda/direita).
+        if (sr != null) sr.flipX = direction < 0f;
+
         hopTimer += Time.deltaTime * hopSpeed;
         float hop = Mathf.Abs(Mathf.Sin(hopTimer));
 

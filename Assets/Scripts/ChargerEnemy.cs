@@ -141,7 +141,9 @@ public class ChargerEnemy : MonoBehaviour
             if (runSprite != null) sr.sprite = runSprite;
         }
         transform.DOKill();
-        transform.localScale = baseScale;
+        // Mantem a virada do sprite na direcao da investida (nao volta para a
+        // escala de spawn, o que fazia o runner dar o dash de costas).
+        transform.localScale = new Vector3(Mathf.Abs(baseScale.x) * direction, baseScale.y, baseScale.z);
         State = ChargerState.Charge;
     }
 
@@ -155,7 +157,7 @@ public class ChargerEnemy : MonoBehaviour
             if (idleSprite != null) sr.sprite = idleSprite;
         }
         transform.DOKill();
-        transform.localScale = baseScale;
+        transform.localScale = new Vector3(Mathf.Abs(baseScale.x) * direction, baseScale.y, baseScale.z);
         State = ChargerState.Recover;
         stateTimer = RecoverDuration;
     }
