@@ -141,6 +141,25 @@ public static class ResponsiveLayoutValidator
                 Mathf.Abs(autoTurnX - (halfWidth - 0.6f)) < Epsilon && autoTurnX < halfWidth,
                 $"autoTurnX={autoTurnX:F3} (meia-largura={halfWidth:F3}, folga {halfWidth - autoTurnX:F2})");
 
+            // O sprite do cavaleiro (com a espada) e bem maior que o collider do
+            // corpo: o clamp lateral precisa de folga para o personagem INTEIRO
+            // ficar dentro da tela quando encosta nas bordas da arena. Mede os
+            // sprites REAIS de runtime (madfeira do PlayerController), nao o
+            // idle serializado na cena (53x48), que nao representa o jogo.
+            var runtimeBg = GetObject<Sprite>(player, "broadswordSprite");
+            var runtimeDagger = GetObject<Sprite>(player, "daggerSprite");
+            Sprite runtimeSprite = runtimeBg != null ? runtimeBg : runtimeDagger;
+            if (runtimeSprite != null)
+            {
+                float visualHalf = Mathf.Max(
+                    runtimeBg != null ? runtimeBg.bounds.extents.x : 0f,
+                    runtimeDagger != null ? runtimeDagger.bounds.extents.x : 0f) * Mathf.Abs(player.transform.lossyScale.x);
+                float clampRoom = halfWidth - visualHalf;
+                Check(results, ref passed, ref failed, c, "Sprite do cavaleiro cabe na tela (clamp lateral)",
+                    clampRoom > 0.1f,
+                    $"meia-largura visual={visualHalf:F3}, folga do clamp={clampRoom:F3} vs visivel +/-{halfWidth:F3}");
+            }
+
             // O chao precisa cobrir ate alem da face interna das paredes, senao
             // o cavaleiro cai no vao quando vai pras extremidades laterais.
             float groundHalfW = groundCol.size.x * 0.5f;

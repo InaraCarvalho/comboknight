@@ -88,6 +88,12 @@ public class PlayerController : MonoBehaviour
     // Throttle do feedback visual do bloqueio melee frontal (evita spam do
     // texto "BLOQUEADO" a cada frame enquanto o inimigo permanece em contato).
     private float lastBlockFeedback;
+    // Limite lateral enviado pela ResponsiveCamera (meia-largura visivel).
+    // O sprite do cavaleiro e bem maior que o collider do corpo, entao o clamp
+    // usa a MEIA-LARGURA VISUAL para o personagem inteiro ficar na tela: as
+    // paredes (WallLeft/WallRight) so sao a rede de seguranca do knockback.
+    private float arenaHalfWidth = float.MaxValue;
+    private float visualHalfWidth = 1.03f;
 
     private void Awake()
     {
@@ -334,6 +340,24 @@ public class PlayerController : MonoBehaviour
                 vx = 0f;
             rb.linearVelocity = new Vector2(vx, rb.linearVelocity.y);
         }
+
+        ApplyLateralClamp();
+    }
+
+    // Impede o sprite do cavaleiro de sair da tela: as paredes fisicas seguram o
+    // COLLIDER do corpo (0.38), mas o sprite e muito maior (164px, escala
+    // 1.25 => metade dele ~1.03 unidade). O limite usa a meia-largura VISUAL
+    // para o personagem inteiro permanecer dentro da area visivel.
+    private void ApplyLateralClamp()
+    {
+        if (arenaHalfWidth >= float.MaxValue || rb == null) return;
+        float maxX = Mathf.Max(0.01f, arenaHalfWidth - visualHalfWidth);
+        float clampedX = Mathf.Clamp(rb.position.x, -maxX, maxX);
+        if (Mathf.Abs(rb.position.x - clampedX) > 0.0001f)
+        {
+            rb.position = new Vector2(clampedX, rb.position.y);
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+        }
     }
 
     public void SetMoveInput(float dir)
@@ -354,9 +378,13 @@ public class PlayerController : MonoBehaviour
     // compatibilidade com o ResponsiveLayoutValidator (que confere se o valor
     // acompanha a meia-largura visivel da tela). O cavaleiro NAO usa mais este
     // valor para virar sozinho — a direcao agora e exclusiva do jogador.
+    // O clamp lateral usa a meia-largura VISUAL (UpdatePlayerSprite recalcula
+    // visualHalfWidth) para o personagem inteiro ficar dentro da tela.
     public void SetArenaBounds(float halfWidth)
     {
+        arenaHalfWidth = halfWidth;
         autoTurnX = halfWidth - 0.6f;
+        ApplyLateralClamp();
     }
 
     // ===== Espada & Escudo: anula projeteis frontais (ETAPA 2) =====
@@ -546,6 +574,11 @@ public class PlayerController : MonoBehaviour
         // (nao ha artes separadas para padrao/ritmica/escudo).
         Sprite weaponSpr = (CurrentWeapon == WeaponType.Dagger) ? daggerSprite : broadswordSprite;
         if (weaponSpr != null) bodyRenderer.sprite = weaponSpr;
+
+        // Meia-largura VISUAL do corpo (sprite em units * escala) usada no clamp
+        // lateral: o sprite inclui a espada e e bem maior que o collider.
+        visualHalfWidth = bodyRenderer.sprite.bounds.extents.x * baseScale.x;
+        ApplyLateralClamp();
 
         // Antigo (espada visivel somente durante o ataque):
         // if (IsAttacking)
