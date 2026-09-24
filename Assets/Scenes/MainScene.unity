@@ -4375,7 +4375,7 @@ MonoBehaviour:
   shooterIdleSprite: {fileID: 7257567913506708742, guid: 09b388a6a48ae174d94caa305c1dac61, type: 3}
   shooterPrepareSprite: {fileID: 4426294609874065467, guid: f08e1defc6e57d845ac1f63f6c0c8739, type: 3}
   shooterShootSprite: {fileID: -3522987849309635434, guid: 0745d75280273814dbf809329df265dc, type: 3}
-  projectileSprite: {fileID: -4346244404228752641, guid: b1356df03511cab4fa73b21ec476c736, type: 3}
+  projectileSprite: {fileID: -4346244404228752641, guid: b1356df03511cab4fa73b21ec476736c, type: 3}
 --- !u!4 &1131875204
 Transform:
   m_ObjectHideFlags: 0

@@ -1,5 +1,5 @@
 QA NEW ENEMIES - EDIT MODE (ETAPA 3)
-Date: 2026-09-22 17:45:29
+Date: 2026-09-24 11:25:09
 [PASS] Gating_Nv1: [Slime] (esperado Slime)
 [PASS] Gating_Nv2_Charger: [Slime,Charger] (esperado Slime+Charger)
 [PASS] Gating_Nv3_Bat: [Slime,Charger,Bat] (esperado Slime+Charger+Bat)
@@ -24,7 +24,8 @@ Date: 2026-09-22 17:45:29
 [PASS] Charger_Rigidbody: presente
 [PASS] Charger_Collider: presente
 [PASS] Charger_HitFlash: presente
-[PASS] Charger_CorLaranja: RGBA(1.000, 0.550, 0.080, 1.000)
+[PASS] Charger_SpriteIdle: Runner_Idle_0
+[PASS] Charger_SpriteRun: ok
 [PASS] Shooter_PrefabCriado: ShooterPrefabTemplate
 [PASS] Shooter_Tag: Enemy
 [PASS] Shooter_Inativo: active=False
@@ -33,10 +34,12 @@ Date: 2026-09-22 17:45:29
 [PASS] Shooter_Collider: presente
 [PASS] Shooter_HitFlash: presente
 [PASS] Shooter_WiringProjetil: ligado
-[PASS] Shooter_CorRoxa: RGBA(0.620, 0.250, 0.920, 1.000)
+[PASS] Shooter_SpriteIdle: Archer_Idle_0
+[PASS] Shooter_WiringPoses: ok
 [PASS] Projetil_PrefabCriado: ProjectilePrefabTemplate
 [PASS] Projetil_Tag: Projectile
 [PASS] Projetil_Componente: presente
 [PASS] Projetil_Trigger: isTrigger=True
 [PASS] Projetil_Rigidbody: presente
-SUMMARY: PASS=39 FAIL=0 TOTAL=39
+[PASS] Projetil_SpriteFlecha: Arrow_0
+SUMMARY: PASS=42 FAIL=0 TOTAL=42
