@@ -61,30 +61,34 @@ public class RuntimeQARunner : MonoBehaviour
         var comboTmp = GameObject.Find("ComboText")?.GetComponent<TextMeshProUGUI>();
         var coinsTmp = GameObject.Find("CoinsText")?.GetComponent<TextMeshProUGUI>();
 
-        bool hudOk = weaponTmp != null && weaponTmp.text == "LAMINA REAL" &&
+        bool hudOk = weaponTmp != null && weaponTmp.text == "ESPADA PADRÃO" &&
                      scoreTmp != null && scoreTmp.text.Contains("SCORE") &&
                      comboTmp != null && comboTmp.text.Contains("COMBO") &&
                      coinsTmp != null && coinsTmp.text == "0";
 
         RecordResult("T03_HUD_Initialization", hudOk,
-            hudOk ? "HUD correctly reflects Lamina Real, Score 0, Combo x0, Coins 0." : "HUD values mismatch.");
+            hudOk ? "HUD correctly reflects Espada Padrao, Score 0, Combo x0, Coins 0." : "HUD values mismatch.");
 
         player.SetMoveInput(1f);
         yield return new WaitForSeconds(0.25f);
         var rb = player.GetComponent<Rigidbody2D>();
         bool movedRight = rb.linearVelocity.x > 0.5f;
 
+        player.SetMoveInput(0f);
+        yield return new WaitForSeconds(0.2f);
+        bool keepsRightOnRelease = rb.linearVelocity.x > 0.5f;
+
         player.SetMoveInput(-1f);
         yield return new WaitForSeconds(0.35f);
         bool movedLeft = rb.linearVelocity.x < -0.5f;
 
         player.SetMoveInput(0f);
-        yield return new WaitForSeconds(0.15f);
-        bool stoppedOnRelease = Mathf.Abs(rb.linearVelocity.x) < 0.05f;
+        yield return new WaitForSeconds(0.2f);
+        bool keepsLeftOnRelease = rb.linearVelocity.x < -0.5f;
 
-        bool moveSuccess = movedRight && movedLeft && stoppedOnRelease;
-        RecordResult("T04_Horizontal_Movement", moveSuccess,
-            moveSuccess ? "Player moves right and left responsive to input and stops immediately on release." : $"Movement failed: right={movedRight}, left={movedLeft}, stopped={stoppedOnRelease}");
+        bool moveSuccess = movedRight && keepsRightOnRelease && movedLeft && keepsLeftOnRelease;
+        RecordResult("T04_Horizontal_AutoRun", moveSuccess,
+            moveSuccess ? "Player auto-runs right/left, keeps direction on release, and turns only on reverse input." : $"AutoRun failed: right={movedRight}, keepRight={keepsRightOnRelease}, left={movedLeft}, keepLeft={keepsLeftOnRelease}");
 
         player.Jump();
         yield return new WaitForFixedUpdate();
@@ -95,13 +99,13 @@ public class RuntimeQARunner : MonoBehaviour
             jumped ? "Player jumped with upward vertical velocity and landed." : "Jump velocity was zero.");
 
         player.SwapWeapon();
-        bool swappedToDagger = player.CurrentWeapon == PlayerController.WeaponType.Dagger && weaponTmp != null && weaponTmp.text == "ADAGA CARMESIM";
+        bool swappedToDagger = player.CurrentWeapon == PlayerController.WeaponType.Dagger && weaponTmp != null && weaponTmp.text == "ADAGA VELOZ";
 
         player.SwapWeapon();
-        bool swappedBackToBroad = player.CurrentWeapon == PlayerController.WeaponType.Broadsword && weaponTmp != null && weaponTmp.text == "LAMINA REAL";
+        bool swappedBackToBroad = player.CurrentWeapon == PlayerController.WeaponType.Broadsword && weaponTmp != null && weaponTmp.text == "LÂMINA REAL";
 
         RecordResult("T06_Weapon_Swap", swappedToDagger && swappedBackToBroad,
-            (swappedToDagger && swappedBackToBroad) ? "Weapon toggled between Broadsword and Dagger, HUD text synced." : "Weapon swap failed.");
+            (swappedToDagger && swappedBackToBroad) ? "Weapon cycled Espada Padrao -> Adaga -> Lamina Real, HUD text synced." : "Weapon swap failed.");
 
         player.Attack();
         yield return new WaitForSeconds(0.2f);
@@ -136,10 +140,9 @@ public class RuntimeQARunner : MonoBehaviour
         var vbLeft = GameObject.Find("BtnLeft")?.GetComponent<VirtualButton>();
         var vbRight = GameObject.Find("BtnRight")?.GetComponent<VirtualButton>();
         var vbJump = GameObject.Find("BtnJump")?.GetComponent<VirtualButton>();
-        var vbSwap = GameObject.Find("BtnSwap")?.GetComponent<VirtualButton>();
 
-        bool vbsPresent = vbLeft != null && vbRight != null && vbJump != null && vbSwap != null;
-        bool vbMoveStopOk = false;
+        bool vbsPresent = vbLeft != null && vbRight != null && vbJump != null;
+        bool vbMoveAutoRunOk = false;
         if (vbsPresent)
         {
             vbRight.Press();
@@ -148,7 +151,7 @@ public class RuntimeQARunner : MonoBehaviour
 
             vbRight.Release();
             yield return new WaitForSeconds(0.15f);
-            bool vbStoppedRight = Mathf.Abs(rb.linearVelocity.x) < 0.05f;
+            bool vbKeepsRight = rb.linearVelocity.x > 0.5f;
 
             vbLeft.Press();
             yield return new WaitForSeconds(0.2f);
@@ -156,13 +159,13 @@ public class RuntimeQARunner : MonoBehaviour
 
             vbLeft.Release();
             yield return new WaitForSeconds(0.15f);
-            bool vbStoppedLeft = Mathf.Abs(rb.linearVelocity.x) < 0.05f;
+            bool vbKeepsLeft = rb.linearVelocity.x < -0.5f;
 
-            vbMoveStopOk = vbMovedRight && vbStoppedRight && vbMovedLeft && vbStoppedLeft;
+            vbMoveAutoRunOk = vbMovedRight && vbKeepsRight && vbMovedLeft && vbKeepsLeft;
         }
 
-        RecordResult("T07C_Virtual_Buttons_MovementAndStop", vbsPresent && vbMoveStopOk,
-            (vbsPresent && vbMoveStopOk) ? "All 4 virtual buttons present; Left/Right buttons move player while held and stop immediately on release." : "Virtual button movement/stop test failed.");
+        RecordResult("T07C_Virtual_Buttons_AutoRun", vbsPresent && vbMoveAutoRunOk,
+            (vbsPresent && vbMoveAutoRunOk) ? "All 4 virtual buttons present; Left/Right set direction and the player keeps auto-running after release until reversed." : "Virtual button auto-run movement test failed.");
 
         ScreenCapture.CaptureScreenshot(screenshotDir + "/QA_02_GameplayAction.png");
         yield return new WaitForSecondsRealtime(0.2f);

@@ -123,12 +123,17 @@ public class GameplayBot : MonoBehaviour
     public void ToggleBot()
     {
         isBotActive = !isBotActive;
+        if (player == null) player = FindAnyObjectByType<PlayerController>();
+        // Auto-run (anda sozinho na ultima direcao) e do jogador real. Com o
+        // auto-pilot ativo, o movimento volta a ser 100% controlado pelo codigo.
         if (!isBotActive)
         {
             ReleaseMovement();
+            player?.SetAutoRun(true);
         }
         else
         {
+            player?.SetAutoRun(false);
             CacheReferences();
         }
 

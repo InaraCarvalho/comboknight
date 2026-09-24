@@ -1,0 +1,19 @@
+QA ARMOR BAR - PLAY MODE (ETAPA 6)
+Date: 2026-09-22 17:44:55
+[PASS] Setup: active=True level=1
+[PASS] ArmorBar_Existe: root=True fill=True texto=True
+[PASS] ArmorBar_TamanhoPosicao: size=(240.00, 8.00) pos=(20.00, -48.00) hpPos=(20.00, -26.00) hpSize=(240.00, 18.00)
+[PASS] ArmorBar_FillAzul: cor=RGBA(0.302, 0.651, 1.000, 1.000) esperado=#4DA6FF tipo=Filled/Horizontal
+[PASS] ArmorBar_Inicial_Oculta: armor=0/100 (esperado 0) fill=0,000 (esperado 0,000) barra=False texto=False label=''
+[PASS] Loja_AbreNv5: open=True level=5
+[PASS] Loja_Compra_Armadura: armor=100/100 moedas 100 -> 65 preco=35 interactable=False
+[PASS] ArmorBar_ApósCompra: armor=100/100 (esperado 100) fill=1,000 (esperado 1,000) barra=True texto=True label='ARMADURA 100/100'
+[PASS] Loja_SairEContinuar: open=False scale=1,00 active=True
+[PASS] DanoInimigo_ArmaduraAbsorve: armor=75/100 hp=5,0 (antes hp=5,0)
+[PASS] DanoInimigo_PopupEscudo25: popup 'ESCUDO -25' azul visto
+[PASS] ArmorBar_75_VerdeIntocada: fill=0,750 (esperado 0,750) hpFill=1,000 (antes 1,000)
+[PASS] ArmorBar_AbsorveAteZerar: caminho=50 25 0 armorFinal=0 hp=5,0
+[PASS] ArmorBar_EscondeAoZerar: armor=0/100 (esperado 0) fill=0,000 (esperado 0,000) barra=False texto=False label='ARMADURA 25/100'
+[PASS] HP_SobeDepois_Armadura0: hp 5,0 -> 4,0 hpFill 1,000 -> 0,800 armor=0
+[PASS] GrantArmor_Recarrega: armor=100/100 (esperado 100) fill=1,000 (esperado 1,000) barra=True texto=True label='ARMADURA 100/100'
+SUMMARY: PASS=16 FAIL=0 TOTAL=16

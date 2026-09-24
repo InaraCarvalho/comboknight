@@ -1,0 +1,31 @@
+=== COMBO KNIGHT WEAPONS QA (ETAPA 2) ===
+[PASS] geral Velocidades do conceito: baseSpeed=6,50 (exige 6.50), daggerSpeed=8,20 (exige 8.20)
+[PASS] Espada Padrao Velocidade: weaponSpeed=6,50 esperado=6,50
+[PASS] Espada Padrao Hitbox e alcance: hitbox=(0,50 x 0,60) esperado=(0,50 x 0,60), frente em 0,650 (exige 0,650)
+[PASS] Espada Padrao Duracao do combo: comboDuration=3,20s esperado=3,20s
+[PASS] Espada Padrao Texto do HUD: texto="ESPADA PADRÃO" esperado="ESPADA PADRÃO"
+[PASS] Espada Padrao Projeto frontal bloqueado: escudo=False, bloqueia direita=False, esquerda=False
+[PASS] Adaga Veloz Velocidade: weaponSpeed=8,20 esperado=8,20
+[PASS] Adaga Veloz Hitbox e alcance: hitbox=(0,35 x 0,25) esperado=(0,35 x 0,25), frente em 0,495 (exige 0,495)
+[PASS] Adaga Veloz Duracao do combo: comboDuration=3,20s esperado=3,20s
+[PASS] Adaga Veloz Texto do HUD: texto="ADAGA VELOZ" esperado="ADAGA VELOZ"
+[PASS] Adaga Veloz Projeto frontal bloqueado: escudo=False, bloqueia direita=False, esquerda=False
+[PASS] Lamina Real Velocidade: weaponSpeed=6,50 esperado=6,50
+[PASS] Lamina Real Hitbox e alcance: hitbox=(0,70 x 0,85) esperado=(0,70 x 0,85), frente em 0,830 (exige 0,830)
+[PASS] Lamina Real Duracao do combo: comboDuration=3,20s esperado=3,20s
+[PASS] Lamina Real Texto do HUD: texto="LÂMINA REAL" esperado="LÂMINA REAL"
+[PASS] Lamina Real Projeto frontal bloqueado: escudo=False, bloqueia direita=False, esquerda=False
+[PASS] Arma Ritmica Velocidade: weaponSpeed=6,50 esperado=6,50
+[PASS] Arma Ritmica Hitbox e alcance: hitbox=(0,50 x 0,60) esperado=(0,50 x 0,60), frente em 0,650 (exige 0,650)
+[PASS] Arma Ritmica Duracao do combo: comboDuration=4,50s esperado=4,50s (estendida pela Arma Ritmica)
+[PASS] Arma Ritmica Texto do HUD: texto="ARMA RÍTMICA" esperado="ARMA RÍTMICA"
+[PASS] Arma Ritmica Projeto frontal bloqueado: escudo=False, bloqueia direita=False, esquerda=False
+[PASS] Espada e Escudo Velocidade: weaponSpeed=6,50 esperado=6,50
+[PASS] Espada e Escudo Hitbox e alcance: hitbox=(0,50 x 0,60) esperado=(0,50 x 0,60), frente em 0,650 (exige 0,650)
+[PASS] Espada e Escudo Duracao do combo: comboDuration=3,20s esperado=3,20s
+[PASS] Espada e Escudo Texto do HUD: texto="ESPADA E ESCUDO" esperado="ESPADA E ESCUDO"
+[PASS] Espada e Escudo Projeto frontal bloqueado: escudo=True, bloqueia direita=True, esquerda=False
+[PASS] geral Alcance curto < padrao < longo: adaga=0,495 < padrao=0,650 < lamina real=0,830
+[PASS] geral Ciclo das 5 armas (SwapWeapon): Standard -> Dagger -> Broadsword -> Rhythmic -> ShieldSword -> Standard
+-------------------------------------------------
+SUMMARY: Total=28 | Passed=28 | Failed=0

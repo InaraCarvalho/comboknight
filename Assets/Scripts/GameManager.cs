@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
@@ -9,7 +10,11 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    [SerializeField] private float comboDuration = 3.2f;
+    // Janela de combo (ETAPA 2): 3.2s no padrao; a Arma Ritmica estende para
+    // 4.5s avisando via SetComboDuration (chamado pelo PlayerController).
+    public const float DefaultComboDuration = 3.2f;
+    public const float ExtendedComboDuration = 4.5f;
+    [SerializeField] private float comboDuration = DefaultComboDuration;
     public int Score { get; private set; }
     public int HighScore { get; private set; }
     public int Coins { get; private set; }
@@ -21,26 +26,32 @@ public class GameManager : MonoBehaviour
     public float GameTime { get; private set; }
     // Dificuldade sobe conforme o NIVEL do jogador (e um pouco com o tempo),
     // tornando o jogo mais dificil a cada level up.
-    public float DifficultyMultiplier => 1.0f + Mathf.Min(3.5f, (PlayerLevel - 1) * 0.45f + GameTime / 80.0f);
+    public float DifficultyMultiplier =>
+        1.0f + Mathf.Min(3.0f, (PlayerLevel - 1) * 0.35f + GameTime / 120.0f);
 
     // XP / Nivel: matar inimigos da XP; acumular sobe de nivel.
     public int PlayerLevel { get; private set; } = 1;
     public int XP { get; private set; }
     private int merchantServedLevel;
-    public int XpToNextLevel => 35 + (PlayerLevel - 1) * 25;
+    public int XpToNextLevel => 55 + (PlayerLevel - 1) * 35;
 
     // HUD criado em tempo de execucao (nivel, barra de XP, barra de HP, escudo).
     private TextMeshProUGUI levelText;
     private Image xpBarFill;
+    private TextMeshProUGUI xpNumericText;
     private Image hpBarFill;
     private TextMeshProUGUI armorText;
+    private GameObject armorBarRoot;
+    private Image armorBarFill;
 
-    // Mercador (aparece a cada 5 niveis): painel de loja com 4 itens,
-    // cada um compravel apenas 1 vez por aparicao.
+    // Mercador (aparece a cada 5 niveis): painel de loja com 4 cards
+    // (2 armas sorteadas + armadura + pocao), cada um compravel 1 vez.
     private GameObject shopPanel;
     private TextMeshProUGUI shopCoinsText;
     private Button[] shopButtons;
     private int[] shopPrices;
+    private bool[] shopBought;
+    private PlayerController.WeaponType[] shopWeapons;
     private bool shopWeaponChosen;
 
     [SerializeField] private GameObject coinPrefab;
@@ -152,11 +163,14 @@ public class GameManager : MonoBehaviour
         PlayerLevel = 1;
         XP = 0;
         merchantServedLevel = 0;
-        if (p != null) UpdateArmorHUD(p.HasArmor);
+        if (p != null)
+            UpdateArmorHUD(p.CurrentArmor, p.MaxArmor);
         UpdateLevelHUD();
         UpdateHeartsHUD(p != null ? p.MaxHearts : 5);
         UpdateScoreHUD();
         UpdateCoinsHUD();
+        // HUD da arma acompanha a arma atual desde o inicio da partida.
+        if (p != null) UpdateWeaponHUD(p.CurrentWeapon);
     }
 
     public void RegisterKill(int baseScore, Vector3 pos, bool isBat)
@@ -266,6 +280,10 @@ public class GameManager : MonoBehaviour
         Score += 50;
         UpdateCoinsHUD();
         UpdateScoreHUD();
+        if (shopCoinsText != null) RuntimeUIFactory.SetText(shopCoinsText, $"MOEDAS: {Coins}");
+        // Com a loja aberta, novas moedas podem habilitar itens que antes
+        // estavam inalcancaveis: reavalia os botoes na hora.
+        if (shopPanel != null) RefreshShopItems();
         if (coinsText != null)
         {
             coinsText.transform.DOKill();
@@ -344,7 +362,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void FloatText(Vector3 pos, string text, Color col, float size)
+    public void FloatText(Vector3 pos, string text, Color col, float size)
     {
         if (floatingTextPrefab == null) return;
         var go = Instantiate(floatingTextPrefab, pos, Quaternion.identity);
@@ -372,11 +390,42 @@ public class GameManager : MonoBehaviour
         var fillGo = RuntimeUIFactory.CreateRect("XpFill", bg.transform, Vector2.zero, new Vector2(200f, 8f), new Color(0.3f, 0.85f, 1f));
         xpBarFill = fillGo.GetComponent<Image>();
 
-        armorText = RuntimeUIFactory.CreateText("ArmorText", canvas.transform, "", 14f, new Color(0.9f, 0.9f, 0.5f));
+        // Numero de XP centralizado sobre a barra: branco, negrito e contorno
+        // preto fino para garantir contraste em cima do preenchimento azul.
+        xpNumericText = RuntimeUIFactory.CreateText("XpNumericText", bg.transform, "", 11f, Color.white);
+        xpNumericText.fontStyle = FontStyles.Bold;
+        xpNumericText.outlineWidth = 0.12f;
+        xpNumericText.outlineColor = Color.black;
+        xpNumericText.enableWordWrapping = false;
+        var xnt = (RectTransform)xpNumericText.transform;
+        xnt.anchorMin = xnt.anchorMax = new Vector2(0.5f, 0.5f);
+        xnt.pivot = new Vector2(0.5f, 0.5f);
+        xnt.anchoredPosition = Vector2.zero;
+        xnt.sizeDelta = new Vector2(200f, 14f);
+
+        armorText = RuntimeUIFactory.CreateText("ArmorText", canvas.transform, "", 12f, new Color(0.302f, 0.651f, 1f));
         var art = (RectTransform)armorText.transform;
         art.anchorMin = art.anchorMax = new Vector2(0f, 1f);
         art.pivot = new Vector2(0f, 1f);
-        art.anchoredPosition = new Vector2(20f, -82f);
+        art.anchoredPosition = new Vector2(20f, -60f);
+
+        // Barra de ARMADURA (ETAPA 6): logo abaixo da barra de HP, 240x8,
+        // fundo cinza escuro e fill azul #4da6ff; some quando nao ha armadura.
+        armorBarRoot = RuntimeUIFactory.CreateRect("ArmorBar", canvas.transform, new Vector2(20f, -48f), new Vector2(240f, 8f), new Color(0.12f, 0.12f, 0.14f, 0.9f));
+        var abrt = (RectTransform)armorBarRoot.transform;
+        abrt.anchorMin = abrt.anchorMax = new Vector2(0f, 1f);
+        abrt.pivot = new Vector2(0f, 1f);
+        abrt.anchoredPosition = new Vector2(20f, -48f);
+
+        var armorFillGo = RuntimeUIFactory.CreateRect("ArmorFill", armorBarRoot.transform, Vector2.zero, new Vector2(240f, 8f), new Color(0.302f, 0.651f, 1f));
+        var aft = (RectTransform)armorFillGo.transform;
+        aft.anchorMin = Vector2.zero;
+        aft.anchorMax = Vector2.one;
+        aft.offsetMin = Vector2.zero;
+        aft.offsetMax = Vector2.zero;
+        armorBarFill = armorFillGo.GetComponent<Image>();
+        armorBarFill.type = Image.Type.Filled;
+        armorBarFill.fillMethod = Image.FillMethod.Horizontal;
 
         // Barra de HP (substitui os coracoes): esconde os icones do cenario e
         // cria uma barra preenchida em cima, atualizada por porcentagem.
@@ -404,7 +453,7 @@ public class GameManager : MonoBehaviour
         hpBarFill.fillMethod = Image.FillMethod.Horizontal;
 
         UpdateLevelHUD();
-        UpdateArmorHUD(false);
+        UpdateArmorHUD(0f, 100f);
         UpdateHeartsHUD(5f);
     }
 
@@ -413,15 +462,33 @@ public class GameManager : MonoBehaviour
         if (levelText != null) levelText.text = $"NIVEL {PlayerLevel}";
         if (xpBarFill != null)
         {
-            xpBarFill.fillAmount = Mathf.Clamp01((float)XP / Mathf.Max(1, XpToNextLevel));
+            xpBarFill.fillAmount = (float)XP / XpToNextLevel;
+        }
+        if (xpNumericText != null)
+        {
+            int remaining = Mathf.Max(0, XpToNextLevel - XP);
+            xpNumericText.text = $"{XP} / {XpToNextLevel} XP  (-{remaining})";
         }
     }
 
-    public void UpdateArmorHUD(bool hasArmor)
+    // Barra de armadura (ETAPA 6): fill azul proporcionail ao sobrevida,
+    // barra e texto visiveis apenas enquanto houver armadura.
+    public void UpdateArmorHUD(float currentArmor, float maxArmor)
     {
-        if (armorText == null) return;
-        armorText.text = hasArmor ? "ESCUDO ATIVO (+1)" : "ESCUDO: —";
-        armorText.color = hasArmor ? new Color(1f, 0.85f, 0.3f) : new Color(0.55f, 0.55f, 0.55f);
+        float ratio = maxArmor > 0f ? Mathf.Clamp01(currentArmor / maxArmor) : 0f;
+        bool active = currentArmor > 0f;
+
+        if (armorBarFill != null) armorBarFill.fillAmount = ratio;
+        if (armorBarRoot != null) armorBarRoot.SetActive(active);
+        if (armorText != null)
+        {
+            armorText.gameObject.SetActive(active);
+            if (active)
+            {
+                armorText.text = $"ARMADURA {Mathf.CeilToInt(currentArmor)}/{Mathf.CeilToInt(maxArmor)}";
+                armorText.color = new Color(0.302f, 0.651f, 1f);
+            }
+        }
     }
 
     // ===== Mercador (aparece a cada 5 niveis) =====
@@ -446,6 +513,8 @@ public class GameManager : MonoBehaviour
             shopPanel = null;
             shopButtons = null;
             shopPrices = null;
+            shopBought = null;
+            shopWeapons = null;
         }
         if (restoreTime) Time.timeScale = 1f;
     }
@@ -457,78 +526,174 @@ public class GameManager : MonoBehaviour
         if (go.GetComponent<InputSystemUIInputModule>() == null) go.AddComponent<InputSystemUIInputModule>();
     }
 
+    private static readonly PlayerController.WeaponType[] AllShopWeapons =
+    {
+        PlayerController.WeaponType.Standard,
+        PlayerController.WeaponType.Dagger,
+        PlayerController.WeaponType.Broadsword,
+        PlayerController.WeaponType.Rhythmic,
+        PlayerController.WeaponType.ShieldSword
+    };
+
     private void BuildShopUI()
     {
         var canvas = FindAnyObjectByType<Canvas>();
         if (canvas == null) return;
 
-        shopPanel = RuntimeUIFactory.CreateRect("Merchant", canvas.transform, Vector2.zero, new Vector2(1f, 1f), new Color(0f, 0f, 0f, 0.75f));
+        // Fundo escuro cobrindo a tela inteira, com fade-in (o jogo ja esta
+        // pausado; os tweens usam SetUpdate para rodarem com timeScale 0).
+        shopPanel = RuntimeUIFactory.CreateRect("Merchant", canvas.transform, Vector2.zero, new Vector2(1f, 1f), new Color(0f, 0f, 0f, 0f));
         var prt = (RectTransform)shopPanel.transform;
         prt.anchorMin = Vector2.zero;
         prt.anchorMax = Vector2.one;
         prt.offsetMin = Vector2.zero;
         prt.offsetMax = Vector2.zero;
 
-        var card = RuntimeUIFactory.CreateRect("MerchantCard", shopPanel.transform, Vector2.zero, new Vector2(620f, 500f), new Color(0.1f, 0.09f, 0.12f, 0.98f));
+        var bgImg = shopPanel.GetComponent<Image>();
+        bgImg.DOFade(0.85f, 0.35f).SetEase(Ease.OutQuad).SetUpdate(true).SetLink(shopPanel);
+
+        // Card central estilizado (entra com scale-out).
+        var card = RuntimeUIFactory.CreateRect("MerchantCard", shopPanel.transform, Vector2.zero, new Vector2(700f, 600f), new Color(0.1f, 0.09f, 0.13f, 0.98f));
         card.transform.localScale = Vector3.zero;
-        card.transform.DOScale(1f, 0.3f).SetEase(Ease.OutBack).SetUpdate(true);
+        card.transform.DOScale(1f, 0.3f).SetEase(Ease.OutBack).SetUpdate(true).SetLink(shopPanel);
 
-        var title = RuntimeUIFactory.CreateText("Title", card.transform, "MERCADOR", 30f, new Color(1f, 0.85f, 0.2f));
-        ((RectTransform)title.transform).anchoredPosition = new Vector2(0f, 200f);
+        RuntimeUIFactory.CreateRect("CardAccent", card.transform, new Vector2(0f, 297f), new Vector2(700f, 6f), new Color(1f, 0.85f, 0.2f));
 
-        shopCoinsText = RuntimeUIFactory.CreateText("ShopCoins", card.transform, $"MOEDAS: {Coins}", 28f, Color.white);
-        ((RectTransform)shopCoinsText.transform).anchoredPosition = new Vector2(0f, 158f);
+        var title = RuntimeUIFactory.CreateText("Title", card.transform, "MERCADOR", 34f, new Color(1f, 0.94f, 0.78f));
+        ((RectTransform)title.transform).anchoredPosition = new Vector2(0f, 252f);
 
-        Button dagBtn = AddShopItem(card.transform, "ADAGA VELOZ", "- arma curta:\ncavaleiro mais rapido", "25", 116f, BuyDagger);
-        Button broadBtn = AddShopItem(card.transform, "LAMINA REAL", "- arma longa:\nalcance maior, dificil ser atingido", "25", 42f, BuyBroadsword);
-        Button armorBtn = AddShopItem(card.transform, "ARMADURA", "- escudo de 1 golpe\n(nao regenera; comprar de novo recarrega)", "35", -42f, BuyArmor);
-        Button potionBtn = AddShopItem(card.transform, "POCAO DE CURA", "- recupera 50% do HP total", "20", -116f, BuyPotion);
+        shopCoinsText = RuntimeUIFactory.CreateText("ShopCoins", card.transform, $"MOEDAS: {Coins}", 26f, new Color(1f, 0.85f, 0.2f));
+        ((RectTransform)shopCoinsText.transform).anchoredPosition = new Vector2(0f, 210f);
 
-        shopButtons = new[] { dagBtn, broadBtn, armorBtn, potionBtn };
+        var subtitle = RuntimeUIFactory.CreateText("Subtitle", card.transform,
+            "4 ofertas exclusivas desta visita — cada item pode ser comprado uma vez só.", 15f, new Color(0.72f, 0.72f, 0.78f));
+        subtitle.enableWordWrapping = true;
+        ((RectTransform)subtitle.transform).anchoredPosition = new Vector2(0f, 176f);
+        ((RectTransform)subtitle.transform).sizeDelta = new Vector2(640f, 24f);
+
+        // Sorteio: 2 das 5 armas, nunca a que o jogador ja esta equipando.
+        shopWeapons = RollTwoWeapons();
+        var weapon0 = shopWeapons[0];
+        var weapon1 = shopWeapons[1];
+        Color weaponAccent = new Color(0.45f, 0.65f, 1f);
+        Color armorAccent = new Color(1f, 0.85f, 0.2f);
+        Color potionAccent = new Color(0.4f, 0.95f, 0.55f);
+
+        // Grid 2x2 de cards: 2 armas + armadura + pocao.
+        Button w0Btn = AddShopCard(card.transform, new Vector2(-160f, 45f),
+            WeaponDisplayName(weapon0), WeaponDescription(weapon0), 25, weaponAccent, () => BuyWeaponSlot(0));
+        Button w1Btn = AddShopCard(card.transform, new Vector2(160f, 45f),
+            WeaponDisplayName(weapon1), WeaponDescription(weapon1), 25, weaponAccent, () => BuyWeaponSlot(1));
+        Button armorBtn = AddShopCard(card.transform, new Vector2(-160f, -115f),
+            "ARMADURA", "Barra azul de 100 que absorve dano\nantes do HP (recompra recarrega)", 35, armorAccent, BuyArmor);
+        Button potionBtn = AddShopCard(card.transform, new Vector2(160f, -115f),
+            "POÇÃO DE CURA", "Recupera 50% do HP total", 20, potionAccent, BuyPotion);
+
+        shopButtons = new[] { w0Btn, w1Btn, armorBtn, potionBtn };
         shopPrices = new[] { 25, 25, 35, 20 };
+        shopBought = new bool[4];
         shopWeaponChosen = false;
 
-        Button closeBtn = RuntimeUIFactory.CreateButton("CloseBtn", card.transform, "FECHAR", () => CloseMerchant(), new Color(0.65f, 0.2f, 0.2f), Color.white);
-        var closeRt = (RectTransform)closeBtn.transform;
-        closeRt.anchoredPosition = new Vector2(0f, -190f);
-        closeRt.sizeDelta = new Vector2(150f, 44f);
-        var closeLbl = closeBtn.GetComponentInChildren<TextMeshProUGUI>();
+        Button exitBtn = RuntimeUIFactory.CreateButton("CloseBtn", card.transform, "SAIR E CONTINUAR", () => CloseMerchant(), new Color(0.7f, 0.25f, 0.25f), Color.white);
+        var closeRt = (RectTransform)exitBtn.transform;
+        closeRt.anchoredPosition = new Vector2(0f, -255f);
+        closeRt.sizeDelta = new Vector2(260f, 48f);
+        var closeLbl = exitBtn.GetComponentInChildren<TextMeshProUGUI>();
         if (closeLbl != null)
         {
-            closeLbl.fontSize = 22f;
-            ((RectTransform)closeLbl.transform).sizeDelta = new Vector2(150f, 44f);
+            closeLbl.fontSize = 20f;
+            ((RectTransform)closeLbl.transform).sizeDelta = new Vector2(260f, 48f);
         }
 
         RefreshShopItems();
     }
 
-    private Button AddShopItem(Transform card, string name, string desc, string price, float yOffset, System.Action onBuy)
+    // Sorteia 2 armas distintas das 5 possiveis, excluindo a equipada agora.
+    private PlayerController.WeaponType[] RollTwoWeapons()
     {
-        var row = RuntimeUIFactory.CreateRect("Row" + name, card, new Vector2(0f, yOffset), new Vector2(560f, 68f), new Color(0.18f, 0.17f, 0.2f, 0.9f));
+        if (cachedPlayer == null) cachedPlayer = FindAnyObjectByType<PlayerController>();
+        var pool = new List<PlayerController.WeaponType>(AllShopWeapons);
+        if (cachedPlayer != null) pool.Remove(cachedPlayer.CurrentWeapon);
+        for (int i = pool.Count - 1; i > 0; i--)
+        {
+            int j = Random.Range(0, i + 1);
+            var tmp = pool[i];
+            pool[i] = pool[j];
+            pool[j] = tmp;
+        }
+        return new[] { pool[0], pool[1] };
+    }
 
-        var nameTmp = RuntimeUIFactory.CreateText("Name", row.transform, name, 20f, new Color(1f, 0.9f, 0.3f));
-        nameTmp.alignment = TMPro.TextAlignmentOptions.MidlineLeft;
-        ((RectTransform)nameTmp.transform).anchoredPosition = new Vector2(-120f, 15f);
-        ((RectTransform)nameTmp.transform).sizeDelta = new Vector2(300f, 26f);
+    private static string WeaponDisplayName(PlayerController.WeaponType weapon)
+    {
+        switch (weapon)
+        {
+            case PlayerController.WeaponType.Dagger: return "ADAGA VELOZ";
+            case PlayerController.WeaponType.Broadsword: return "LÂMINA REAL";
+            case PlayerController.WeaponType.Rhythmic: return "ARMA RÍTMICA";
+            case PlayerController.WeaponType.ShieldSword: return "ESPADA E ESCUDO";
+            default: return "ESPADA PADRÃO";
+        }
+    }
 
-        var descTmp = RuntimeUIFactory.CreateText("Desc", row.transform, desc, 16f, new Color(0.85f, 0.85f, 0.85f));
-        descTmp.alignment = TMPro.TextAlignmentOptions.MidlineLeft;
+    private static string WeaponDescription(PlayerController.WeaponType weapon)
+    {
+        switch (weapon)
+        {
+            case PlayerController.WeaponType.Dagger:
+                return "Rápida: velocidade 6.6, pulo +15%\ncrítico 2x, +1 moeda por abate";
+            case PlayerController.WeaponType.Broadsword:
+                return "Alcance maior (hitbox longa)\ncrítico 2x contra morcegos";
+            case PlayerController.WeaponType.Rhythmic:
+                return "Janela de combo estendida:\na janela de combo dura 4.5s";
+            case PlayerController.WeaponType.ShieldSword:
+                return "Defensiva: escudo bloqueia\nprojéteis frontais inimigos";
+            default:
+                return "Equilibrada: velocidade 5.0\nhitbox e alcance padrões";
+        }
+    }
+
+    // Card de item da loja: nome, descricao de atributos, preco com icone de
+    // moeda e botao de comprar. Retorna o botao para o painel gerenciar.
+    private Button AddShopCard(Transform card, Vector2 pos, string name, string desc, int price, Color accent, System.Action onBuy)
+    {
+        var row = RuntimeUIFactory.CreateRect("Card_" + name, card, pos, new Vector2(300f, 150f), new Color(0.16f, 0.15f, 0.19f, 0.97f));
+        RuntimeUIFactory.CreateRect("Accent", row.transform, new Vector2(0f, 72f), new Vector2(300f, 6f), accent);
+
+        var nameTmp = RuntimeUIFactory.CreateText("Name", row.transform, name, 20f, new Color(1f, 0.92f, 0.45f));
+        nameTmp.alignment = TextAlignmentOptions.MidlineLeft;
+        var nrT = (RectTransform)nameTmp.transform;
+        nrT.pivot = new Vector2(0f, 0.5f);
+        nrT.anchoredPosition = new Vector2(-140f, 48f);
+        nrT.sizeDelta = new Vector2(280f, 26f);
+
+        var descTmp = RuntimeUIFactory.CreateText("Desc", row.transform, desc, 14f, new Color(0.78f, 0.78f, 0.85f));
+        descTmp.alignment = TextAlignmentOptions.MidlineLeft;
         descTmp.enableWordWrapping = true;
-        ((RectTransform)descTmp.transform).anchoredPosition = new Vector2(-110f, -14f);
-        ((RectTransform)descTmp.transform).sizeDelta = new Vector2(300f, 36f);
+        var drT = (RectTransform)descTmp.transform;
+        drT.pivot = new Vector2(0f, 0.5f);
+        drT.anchoredPosition = new Vector2(-140f, 0f);
+        drT.sizeDelta = new Vector2(280f, 48f);
 
-        var priceTmp = RuntimeUIFactory.CreateText("Price", row.transform, price, 26f, Color.white);
-        ((RectTransform)priceTmp.transform).anchoredPosition = new Vector2(95f, 0f);
+        var coinIcon = RuntimeUIFactory.CreateRect("CoinIcon", row.transform, new Vector2(-114f, -52f), new Vector2(16f, 16f), new Color(1f, 0.85f, 0.2f));
+        coinIcon.GetComponent<Image>().sprite = RuntimeUIFactory.CircleSprite;
+
+        var priceTmp = RuntimeUIFactory.CreateText("Price", row.transform, price.ToString(), 22f, new Color(1f, 0.85f, 0.2f));
+        priceTmp.alignment = TextAlignmentOptions.MidlineLeft;
+        var prT = (RectTransform)priceTmp.transform;
+        prT.pivot = new Vector2(0f, 0.5f);
+        prT.anchoredPosition = new Vector2(-102f, -52f);
+        prT.sizeDelta = new Vector2(60f, 26f);
 
         var btn = RuntimeUIFactory.CreateButton("BuyBtn", row.transform, "COMPRAR", onBuy, new Color(0.2f, 0.55f, 0.25f), Color.white);
         var brt = (RectTransform)btn.transform;
-        brt.anchoredPosition = new Vector2(225f, 0f);
-        brt.sizeDelta = new Vector2(110f, 46f);
+        brt.anchoredPosition = new Vector2(80f, -52f);
+        brt.sizeDelta = new Vector2(110f, 40f);
         var buyLbl = btn.GetComponentInChildren<TextMeshProUGUI>();
         if (buyLbl != null)
         {
-            buyLbl.fontSize = 20f;
-            ((RectTransform)buyLbl.transform).sizeDelta = new Vector2(110f, 46f);
+            buyLbl.fontSize = 16f;
+            ((RectTransform)buyLbl.transform).sizeDelta = new Vector2(110f, 40f);
         }
         return btn;
     }
@@ -543,23 +708,17 @@ public class GameManager : MonoBehaviour
         return true;
     }
 
-    private void BuyDagger()
+    // Compra uma das armas sorteadas (slot 0 ou 1): paga, equipa, trava a
+    // troca de arma e desativa o outro card de arma.
+    private void BuyWeaponSlot(int slot)
     {
-        if (!TrySpend(25)) return;
+        if (shopWeapons == null || slot < 0 || slot >= shopWeapons.Length) return;
+        if (shopPrices == null || slot >= shopPrices.Length) return;
+        if (!TrySpend(shopPrices[slot])) return;
         if (cachedPlayer == null) cachedPlayer = FindAnyObjectByType<PlayerController>();
-        cachedPlayer?.SetWeapon(PlayerController.WeaponType.Dagger);
+        cachedPlayer?.SetWeapon(shopWeapons[slot]);
         shopWeaponChosen = true;
-        MarkBought(shopButtons, 0);
-        RefreshShopItems();
-    }
-
-    private void BuyBroadsword()
-    {
-        if (!TrySpend(25)) return;
-        if (cachedPlayer == null) cachedPlayer = FindAnyObjectByType<PlayerController>();
-        cachedPlayer?.SetWeapon(PlayerController.WeaponType.Broadsword);
-        shopWeaponChosen = true;
-        MarkBought(shopButtons, 1);
+        MarkBought(shopButtons, slot);
         RefreshShopItems();
     }
 
@@ -584,9 +743,10 @@ public class GameManager : MonoBehaviour
     private void MarkBought(Button[] buttons, int index)
     {
         if (buttons == null || index < 0 || index >= buttons.Length) return;
+        if (shopBought != null && index < shopBought.Length) shopBought[index] = true;
         buttons[index].interactable = false;
         var img = buttons[index].GetComponent<Image>();
-        img.color = new Color(0.25f, 0.25f, 0.28f);
+        if (img != null) img.color = new Color(0.25f, 0.25f, 0.28f);
         var lbl = buttons[index].GetComponentInChildren<TextMeshProUGUI>();
         if (lbl != null) lbl.text = "COMPRADO";
     }
@@ -601,22 +761,30 @@ public class GameManager : MonoBehaviour
 
         for (int i = 0; i < shopButtons.Length; i++)
         {
+            bool bought = shopBought != null && i < shopBought.Length && shopBought[i];
             bool affordable = Coins >= shopPrices[i];
-            bool bought = !shopButtons[i].interactable;
             bool blocked = (i == 0 || i == 1) ? shopWeaponChosen : (i == 3 ? !potionNeeded : false);
             bool enabled = affordable && !bought && !blocked;
             shopButtons[i].interactable = enabled;
             if (!bought)
             {
                 var img = shopButtons[i].GetComponent<Image>();
-                img.color = enabled ? new Color(0.2f, 0.55f, 0.25f) : new Color(0.3f, 0.3f, 0.32f);
+                if (img != null) img.color = enabled ? new Color(0.2f, 0.55f, 0.25f) : new Color(0.3f, 0.3f, 0.32f);
             }
         }
     }
 
+    // Permite que a Arma Ritmica (ou qualquer origem) ajuste a janela de
+    // combo: 4.5s com a Arma Ritmica ativa, 3.2s nas demais armas.
+    public void SetComboDuration(float duration)
+    {
+        comboDuration = duration;
+    }
+
     public void UpdateWeaponHUD(PlayerController.WeaponType weapon)
     {
-        weaponText.text = (weapon == PlayerController.WeaponType.Broadsword) ? "LAMINA REAL" : "ADAGA CARMESIM";
+        if (weaponText == null) return;
+        weaponText.text = WeaponDisplayName(weapon);
         weaponText.transform.DOPunchScale(Vector3.one * 0.25f, 0.2f);
     }
 
@@ -686,7 +854,15 @@ public class GameManager : MonoBehaviour
             Camera.main.DOKill();
             Camera.main.DOShakePosition(duration, magnitude, 14, 90f, true).SetUpdate(true).OnComplete(() =>
             {
-                if (Camera.main != null) Camera.main.transform.position = new Vector3(0f, 0f, -10f);
+                // Restaura o enquadramento ancorado da ResponsiveCamera (o chao
+                // continua alinhado a base da tela) em vez de voltar a (0,0,-10),
+                // que deslocava a cena verticalmente a cada golpe.
+                if (Camera.main != null)
+                {
+                    var responsive = FindAnyObjectByType<ResponsiveCamera>();
+                    if (responsive != null) responsive.AdjustCamera();
+                    else Camera.main.transform.position = new Vector3(0f, 0f, -10f);
+                }
             });
         }
     }

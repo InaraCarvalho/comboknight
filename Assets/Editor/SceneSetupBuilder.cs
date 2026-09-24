@@ -20,9 +20,15 @@ public static class SceneSetupBuilder
         Sprite slimeHopSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/slime_hop.png");
         Sprite batFlyUpSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/bat_fly_up.png");
         Sprite batFlyDownSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/bat_fly_down.png");
+        Sprite runnerIdleSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Runner_Idle.png");
+        Sprite runnerRunSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Runner_run.png");
+        Sprite archerIdleSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Archer_Idle.png");
+        Sprite archerPrepareSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Archer_Prepare.png");
+        Sprite archerShootSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Archer_Shoot.png");
+        Sprite arrowSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Arrow.png");
         Sprite coinGoldSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/coin_gold.png");
         Sprite heartFullSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/heart_full.png");
-        Sprite bgPortraitSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/background_arena_portrait.png");
+        Sprite bgLandscapeSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/background_arena.png");
         Sprite btnLeftSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/ui_btn_left.png");
         Sprite btnRightSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/ui_btn_right.png");
         Sprite btnJumpSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/ui_btn_jump.png");
@@ -108,7 +114,7 @@ public static class SceneSetupBuilder
 
         GameObject batObj = new GameObject("Bat");
         batObj.tag = "Enemy";
-        batObj.transform.localScale = new Vector3(2.2f, 2.2f, 1f);
+        batObj.transform.localScale = new Vector3(1.6f, 1.6f, 1f);
         var batSr = batObj.AddComponent<SpriteRenderer>();
         batSr.sprite = batFlyUpSprite;
         batSr.sortingOrder = 4;
@@ -144,16 +150,19 @@ public static class SceneSetupBuilder
 
         GameObject bgObj = new GameObject("Background");
         var bgSr = bgObj.AddComponent<SpriteRenderer>();
-        bgSr.sprite = bgPortraitSprite;
+        bgSr.sprite = bgLandscapeSprite;
         bgSr.sortingOrder = -10;
         bgObj.transform.localScale = new Vector3(2.25f, 2.25f, 1f);
-        bgObj.transform.position = new Vector3(0f, -1.95f, 0f);
+        bgObj.transform.position = new Vector3(0f, -2.25f, 0f);
 
         var respCam = camObj.AddComponent<ResponsiveCamera>();
         var respSerialized = new SerializedObject(respCam);
         respSerialized.FindProperty("targetHalfWidth").floatValue = 3.95f;
         respSerialized.FindProperty("minOrthoSize").floatValue = 7.0f;
+        respSerialized.FindProperty("groundY").floatValue = -4.5f;
+        respSerialized.FindProperty("groundScreenFraction").floatValue = 0.35f;
         respSerialized.FindProperty("backgroundTransform").objectReferenceValue = bgObj.transform;
+        respSerialized.FindProperty("landscapeBackgroundSprite").objectReferenceValue = bgLandscapeSprite;
         respSerialized.ApplyModifiedProperties();
 
         int groundLayer = LayerMask.NameToLayer("Ground");
@@ -165,8 +174,17 @@ public static class SceneSetupBuilder
         groundObj.tag = "Ground";
         groundObj.layer = groundLayer;
         groundObj.transform.position = new Vector3(0f, -4.5f, 0f);
+        // A tijoleira usa o sub-sprite Ground_0 (pivo topo-centro) direto no
+        // objeto do chao, sem filho: o topo do tijolo coincide com o topo do
+        // colisor em -4.5 e acompanha qualquer ajuste manual de altura.
+        groundObj.transform.localScale = new Vector3(1.15f, 1.15f, 1f);
+        var groundSr = groundObj.AddComponent<SpriteRenderer>();
+        groundSr.sprite = LoadSubSprite("Assets/Sprites/Ground.png", "Ground_0");
+        groundSr.sortingOrder = 1;
         var groundCol = groundObj.AddComponent<BoxCollider2D>();
-        groundCol.size = new Vector2(16f, 12f);
+        // Largura generosa (±20): o ResponsiveCamera ajusta em runtime para a
+        // arena visivel; o valor daqui cobre qualquer resolucao mesmo antes.
+        groundCol.size = new Vector2(40f, 12f);
         groundCol.offset = new Vector2(0f, -6f);
         groundCol.sharedMaterial = noFrictionMat;
 
@@ -186,7 +204,9 @@ public static class SceneSetupBuilder
 
         GameObject playerObj = new GameObject("Player");
         playerObj.tag = "Player";
-        playerObj.transform.position = new Vector3(0f, -3.9f, 0f);
+        // Spawn exatamente com os pes na superficie do chao (topo do solo em
+        // -4.5) para o cavaleiro nao "cair" nem afundar no primeiro frame.
+        playerObj.transform.position = new Vector3(0f, -3.80425f, 0f);
         playerObj.transform.localScale = new Vector3(2.53f, 2.53f, 1f);
         var playerRb = playerObj.AddComponent<Rigidbody2D>();
         playerRb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
@@ -218,8 +238,8 @@ public static class SceneSetupBuilder
         swordColObj.transform.localPosition = Vector3.zero;
         var swordCol = swordColObj.AddComponent<BoxCollider2D>();
         swordCol.isTrigger = true;
-        swordCol.size = new Vector2(0.55f, 0.75f);
-        swordCol.offset = new Vector2(0.42f, 0.20f);
+        swordCol.size = new Vector2(0.50f, 0.60f);
+        swordCol.offset = new Vector2(0.40f, 0.15f);
 
         var playerCtrl = playerObj.AddComponent<PlayerController>();
         var pcSerialized = new SerializedObject(playerCtrl);
@@ -250,10 +270,18 @@ public static class SceneSetupBuilder
         var spawnerSerialized = new SerializedObject(spawner);
         spawnerSerialized.FindProperty("slimePrefab").objectReferenceValue = slimePrefab;
         spawnerSerialized.FindProperty("batPrefab").objectReferenceValue = batPrefab;
-        spawnerSerialized.FindProperty("groundSpawnY").floatValue = -3.95f;
+        spawnerSerialized.FindProperty("slimeSpawnY").floatValue = -4.07f;
+        spawnerSerialized.FindProperty("chargerSpawnY").floatValue = -3.70f;
         spawnerSerialized.FindProperty("minBatY").floatValue = -2.0f;
-        spawnerSerialized.FindProperty("maxBatY").floatValue = 2.5f;
-        spawnerSerialized.FindProperty("spawnDistanceX").floatValue = 4.3f;
+        spawnerSerialized.FindProperty("maxBatY").floatValue = -0.5f;
+        spawnerSerialized.FindProperty("minDistanceFromPlayer").floatValue = 2.4f;
+        spawnerSerialized.FindProperty("warningDuration").floatValue = 0.9f;
+        spawnerSerialized.FindProperty("chargerIdleSprite").objectReferenceValue = runnerIdleSprite;
+        spawnerSerialized.FindProperty("chargerRunSprite").objectReferenceValue = runnerRunSprite;
+        spawnerSerialized.FindProperty("shooterIdleSprite").objectReferenceValue = archerIdleSprite;
+        spawnerSerialized.FindProperty("shooterPrepareSprite").objectReferenceValue = archerPrepareSprite;
+        spawnerSerialized.FindProperty("shooterShootSprite").objectReferenceValue = archerShootSprite;
+        spawnerSerialized.FindProperty("projectileSprite").objectReferenceValue = arrowSprite;
         spawnerSerialized.ApplyModifiedProperties();
 
         GameObject audioObj = new GameObject("AudioManager");
@@ -349,8 +377,8 @@ public static class SceneSetupBuilder
         pbRt.anchorMin = new Vector2(1f, 1f);
         pbRt.anchorMax = new Vector2(1f, 1f);
         pbRt.pivot = new Vector2(1f, 1f);
-        pbRt.anchoredPosition = new Vector2(-56f, -20f);
-        pbRt.sizeDelta = new Vector2(58f, 58f);
+        pbRt.anchoredPosition = new Vector2(-60f, -22f);
+        pbRt.sizeDelta = new Vector2(82f, 82f);
         var pbImg = pauseBtnObj.AddComponent<Image>();
         pbImg.sprite = btnPauseSprite;
         var vbPause = pauseBtnObj.AddComponent<VirtualButton>();
@@ -381,8 +409,8 @@ public static class SceneSetupBuilder
         coinsRt.anchorMin = new Vector2(1f, 1f);
         coinsRt.anchorMax = new Vector2(1f, 1f);
         coinsRt.pivot = new Vector2(1f, 1f);
-        coinsRt.anchoredPosition = new Vector2(-20f, -74f);
-        coinsRt.sizeDelta = new Vector2(120f, 38f);
+        coinsRt.anchoredPosition = new Vector2(-24f, -130f);
+        coinsRt.sizeDelta = new Vector2(180f, 52f);
 
         GameObject coinIconObj = new GameObject("CoinIcon");
         coinIconObj.transform.SetParent(coinsObj.transform, false);
@@ -390,8 +418,8 @@ public static class SceneSetupBuilder
         ciRt.anchorMin = new Vector2(0f, 0.5f);
         ciRt.anchorMax = new Vector2(0f, 0.5f);
         ciRt.pivot = new Vector2(0f, 0.5f);
-        ciRt.anchoredPosition = new Vector2(6f, 0f);
-        ciRt.sizeDelta = new Vector2(26f, 26f);
+        ciRt.anchoredPosition = new Vector2(8f, 0f);
+        ciRt.sizeDelta = new Vector2(36f, 36f);
         var ciImg = coinIconObj.AddComponent<Image>();
         ciImg.sprite = coinGoldSprite;
         ciImg.preserveAspect = true;
@@ -401,11 +429,11 @@ public static class SceneSetupBuilder
         var ctRt = coinsTextObj.AddComponent<RectTransform>();
         ctRt.anchorMin = new Vector2(0f, 0f);
         ctRt.anchorMax = new Vector2(1f, 1f);
-        ctRt.offsetMin = new Vector2(38f, 0f);
+        ctRt.offsetMin = new Vector2(50f, 0f);
         ctRt.offsetMax = Vector2.zero;
         var coinsTmp = coinsTextObj.AddComponent<TextMeshProUGUI>();
         coinsTmp.alignment = TextAlignmentOptions.MidlineLeft;
-        coinsTmp.fontSize = 24f;
+        coinsTmp.fontSize = 32f;
         coinsTmp.characterSpacing = 2f;
         coinsTmp.enableWordWrapping = false;
         coinsTmp.fontStyle = FontStyles.Bold;
@@ -438,7 +466,7 @@ public static class SceneSetupBuilder
         weaponTmp.enableWordWrapping = false;
         weaponTmp.fontStyle = FontStyles.Bold;
         weaponTmp.color = new Color(0.4f, 0.9f, 1f);
-        weaponTmp.text = "LAMINA REAL";
+        weaponTmp.text = "ESPADA PADRÃO";
 
         GameObject comboObj = new GameObject("ComboContainer");
         comboObj.transform.SetParent(hudObj.transform, false);
@@ -505,7 +533,7 @@ public static class SceneSetupBuilder
         lcRt.anchorMax = new Vector2(0f, 0f);
         lcRt.pivot = new Vector2(0f, 0f);
         lcRt.anchoredPosition = new Vector2(24f, 28f);
-        lcRt.sizeDelta = new Vector2(280f, 130f);
+        lcRt.sizeDelta = new Vector2(400f, 180f);
         var lcBg = leftCluster.AddComponent<Image>();
         lcBg.sprite = clusterBgSprite;
         lcBg.type = Image.Type.Sliced;
@@ -516,8 +544,8 @@ public static class SceneSetupBuilder
         blRt.anchorMin = new Vector2(0f, 0.5f);
         blRt.anchorMax = new Vector2(0f, 0.5f);
         blRt.pivot = new Vector2(0f, 0.5f);
-        blRt.anchoredPosition = new Vector2(10f, 0f);
-        blRt.sizeDelta = new Vector2(108f, 108f);
+        blRt.anchoredPosition = new Vector2(26f, 0f);
+        blRt.sizeDelta = new Vector2(160f, 160f);
         var blImg = btnLeftObj.AddComponent<Image>();
         blImg.sprite = btnLeftSprite;
         var blVb = btnLeftObj.AddComponent<VirtualButton>();
@@ -531,8 +559,8 @@ public static class SceneSetupBuilder
         brRt.anchorMin = new Vector2(1f, 0.5f);
         brRt.anchorMax = new Vector2(1f, 0.5f);
         brRt.pivot = new Vector2(1f, 0.5f);
-        brRt.anchoredPosition = new Vector2(-10f, 0f);
-        brRt.sizeDelta = new Vector2(108f, 108f);
+        brRt.anchoredPosition = new Vector2(-26f, 0f);
+        brRt.sizeDelta = new Vector2(160f, 160f);
         var brImg = btnRightObj.AddComponent<Image>();
         brImg.sprite = btnRightSprite;
         var brVb = btnRightObj.AddComponent<VirtualButton>();
@@ -547,25 +575,10 @@ public static class SceneSetupBuilder
         rcRt.anchorMax = new Vector2(1f, 0f);
         rcRt.pivot = new Vector2(1f, 0f);
         rcRt.anchoredPosition = new Vector2(-24f, 28f);
-        rcRt.sizeDelta = new Vector2(280f, 130f);
+        rcRt.sizeDelta = new Vector2(210f, 170f);
         var rcBg = rightCluster.AddComponent<Image>();
         rcBg.sprite = clusterBgSprite;
         rcBg.type = Image.Type.Sliced;
-
-        GameObject btnSwapObj = new GameObject("BtnSwap");
-        btnSwapObj.transform.SetParent(rightCluster.transform, false);
-        var bsRt = btnSwapObj.AddComponent<RectTransform>();
-        bsRt.anchorMin = new Vector2(0f, 0.5f);
-        bsRt.anchorMax = new Vector2(0f, 0.5f);
-        bsRt.pivot = new Vector2(0f, 0.5f);
-        bsRt.anchoredPosition = new Vector2(10f, 0f);
-        bsRt.sizeDelta = new Vector2(104f, 104f);
-        var bsImg = btnSwapObj.AddComponent<Image>();
-        bsImg.sprite = btnSwapSprite;
-        var bsVb = btnSwapObj.AddComponent<VirtualButton>();
-        var bsVbSerialized = new SerializedObject(bsVb);
-        bsVbSerialized.FindProperty("action").enumValueIndex = (int)VirtualButton.ButtonAction.Swap;
-        bsVbSerialized.ApplyModifiedProperties();
 
         GameObject btnJumpObj = new GameObject("BtnJump");
         btnJumpObj.transform.SetParent(rightCluster.transform, false);
@@ -573,8 +586,8 @@ public static class SceneSetupBuilder
         bjRt.anchorMin = new Vector2(1f, 0.5f);
         bjRt.anchorMax = new Vector2(1f, 0.5f);
         bjRt.pivot = new Vector2(1f, 0.5f);
-        bjRt.anchoredPosition = new Vector2(-10f, 0f);
-        bjRt.sizeDelta = new Vector2(150f, 108f);
+        bjRt.anchoredPosition = new Vector2(-18f, 0f);
+        bjRt.sizeDelta = new Vector2(176f, 118f);
         var bjImg = btnJumpObj.AddComponent<Image>();
         bjImg.sprite = btnJumpSprite;
         var bjVb = btnJumpObj.AddComponent<VirtualButton>();
@@ -582,21 +595,21 @@ public static class SceneSetupBuilder
         bjVbSerialized.FindProperty("action").enumValueIndex = (int)VirtualButton.ButtonAction.Jump;
         bjVbSerialized.ApplyModifiedProperties();
 
-        GameObject startPanel = CreateModalPanel(canvasObj.transform, "StartPanel", frameGothicSprite, 650f, 920f);
+        GameObject startPanel = CreateModalPanel(canvasObj.transform, "StartPanel", frameGothicSprite, 650f, 680f);
         var startBox = startPanel.transform.Find("ModalBox");
         AddModalHeader(startBox.gameObject, "COMBO KNIGHT", "2D PIXEL ARCADE ACTION");
         AddModalBodyCard(startBox.gameObject, cardDarkSprite,
-            "<size=28><color=#FFD700><b>OBJETIVO</b></color></size>\n" +
-            "Sobreviva na arena lunar medieval e encadeie abates rapidos para multiplicar seus pontos!\n\n" +
-            "<size=28><color=#FFD700><b>CONTROLES TOUCH</b></color></size>\n" +
-            "• <color=#38BDF8><b>Metade Esquerda:</b></color> Mover para Esquerda\n" +
-            "• <color=#38BDF8><b>Metade Direita:</b></color> Mover para Direita\n" +
-            "• <color=#C084FC><b>Deslize para Cima:</b></color> Pular\n" +
-            "• <color=#F43F5E><b>Ataque Automatico:</b></color> Ataca inimigos proximos (ou duplo toque)\n\n" +
-            "<size=28><color=#FFD700><b>SINERGIA DE ARMAS (2x DANO/PONTOS)</b></color></size>\n" +
-            "• <color=#F43F5E><b>Adaga:</b></color> 2x Dano e Pontos em <b>Slimes</b>\n" +
-            "• <color=#38BDF8><b>Espada (Corte Vertical):</b></color> 2x Dano e Pontos em <b>Morcegos</b>");
-        var startBtn = AddModalButton(startBox.gameObject, "INICIAR BATALHA", btnGoldSprite, -395f, 500f, 90f);
+            "<size=22><color=#FFD700><b>OBJETIVO</b></color></size>\n" +
+            "Sobreviva na arena lunar medieval e encadeie abates rapidos para multiplicar seus pontos!",
+            "<size=22><color=#FFD700><b>CONTROLES TOUCH</b></color></size>\n" +
+            "\u2022 <color=#38BDF8><b>Esquerda:</b></color> Botao Esquerda\n" +
+            "\u2022 <color=#38BDF8><b>Direita:</b></color> Botao Direita\n" +
+            "\u2022 <color=#C084FC><b>Deslize p/ Cima:</b></color> Pular\n" +
+            "\u2022 <color=#F43F5E><b>Ataque:</b></color> Automatico (ou duplo toque)",
+            "<size=22><color=#FFD700><b>ENERGIA DE ARMAS</b></color></size>\n" +
+            "\u2022 <color=#F43F5E><b>Adaga:</b></color> 2x Dano/Pontos em <b>Slimes</b>\n" +
+            "\u2022 <color=#38BDF8><b>Espada (Corte Vertical):</b></color> 2x Dano/Pontos em <b>Morcegos</b>");
+        var startBtn = AddModalButton(startBox.gameObject, "INICIAR BATALHA", btnGoldSprite, -285f, 480f, 90f);
 
         GameObject pausePanel = CreateModalPanel(canvasObj.transform, "PausePanel", frameGothicSprite, 560f, 580f);
         var pauseBox = pausePanel.transform.Find("ModalBox");
@@ -758,7 +771,7 @@ public static class SceneSetupBuilder
         }
     }
 
-    private static void AddModalBodyCard(GameObject parent, Sprite cardSprite, string content)
+    private static void AddModalBodyCard(GameObject parent, Sprite cardSprite, params string[] columns)
     {
         GameObject cardObj = new GameObject("InstructionsCard");
         cardObj.transform.SetParent(parent.transform, false);
@@ -766,27 +779,37 @@ public static class SceneSetupBuilder
         cRt.anchorMin = new Vector2(0.5f, 0.5f);
         cRt.anchorMax = new Vector2(0.5f, 0.5f);
         cRt.pivot = new Vector2(0.5f, 0.5f);
-        cRt.anchoredPosition = new Vector2(0f, 25f);
-        cRt.sizeDelta = new Vector2(580f, 620f);
+        cRt.anchoredPosition = new Vector2(0f, 20f);
+        cRt.sizeDelta = new Vector2(626f, 300f);
         var cImg = cardObj.AddComponent<Image>();
         cImg.sprite = cardSprite;
         cImg.type = Image.Type.Sliced;
 
-        GameObject bodyObj = new GameObject("BodyText");
-        bodyObj.transform.SetParent(cardObj.transform, false);
-        var bRt = bodyObj.AddComponent<RectTransform>();
-        bRt.anchorMin = Vector2.zero;
-        bRt.anchorMax = Vector2.one;
-        bRt.offsetMin = new Vector2(24f, 18f);
-        bRt.offsetMax = new Vector2(-24f, -18f);
-        var bTmp = bodyObj.AddComponent<TextMeshProUGUI>();
-        bTmp.alignment = TextAlignmentOptions.TopLeft;
-        bTmp.fontSize = 22f;
-        bTmp.characterSpacing = 1f;
-        bTmp.lineSpacing = 18f;
-        bTmp.color = new Color(0.95f, 0.96f, 1f);
-        bTmp.richText = true;
-        bTmp.text = content;
+        int count = columns.Length;
+        float colWidth = 188f;
+        float gap = 12f;
+        float startX = -((count - 1) * (colWidth + gap)) / 2f;
+        for (int i = 0; i < count; i++)
+        {
+            GameObject colObj = new GameObject("Column" + (i + 1));
+            colObj.transform.SetParent(cardObj.transform, false);
+            var colRt = colObj.AddComponent<RectTransform>();
+            colRt.anchorMin = new Vector2(0.5f, 0.5f);
+            colRt.anchorMax = new Vector2(0.5f, 0.5f);
+            colRt.pivot = new Vector2(0.5f, 0.5f);
+            float x = startX + i * (colWidth + gap);
+            colRt.anchoredPosition = new Vector2(x, 0f);
+            colRt.sizeDelta = new Vector2(colWidth, 270f);
+            var colTmp = colObj.AddComponent<TextMeshProUGUI>();
+            colTmp.alignment = TextAlignmentOptions.TopLeft;
+            colTmp.fontSize = 17f;
+            colTmp.characterSpacing = 0.5f;
+            colTmp.lineSpacing = 7f;
+            colTmp.color = new Color(0.95f, 0.96f, 1f);
+            colTmp.richText = true;
+            colTmp.enableWordWrapping = true;
+            colTmp.text = columns[i];
+        }
     }
 
     private static Button AddModalButton(GameObject parent, string label, Sprite btnSprite, float yPos, float width, float height)
@@ -861,5 +884,15 @@ public static class SceneSetupBuilder
         vTmp.text = defaultValue;
 
         return vTmp;
+    }
+
+    // Carrega um sub-sprite (multiple spritesheet) pelo nome, e.g. Ground_0.
+    private static Sprite LoadSubSprite(string assetPath, string name)
+    {
+        foreach (var sub in AssetDatabase.LoadAllAssetsAtPath(assetPath))
+        {
+            if (sub is Sprite s && s.name == name) return s;
+        }
+        return null;
     }
 }

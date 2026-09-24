@@ -1,0 +1,24 @@
+QA MERCHANT SHOP - PLAY MODE (ETAPA 4)
+Date: 2026-09-22 17:45:56
+[PASS] Setup: active=True level=1 arma=Standard
+[PASS] Loja_AbreNv5: open=True level=5
+[PASS] Loja_PausaJogo: scale=0,00
+[PASS] Loja_PainelCentral: Merchant + MerchantCard ok
+[PASS] Loja_Titulo: texto=MERCADOR
+[PASS] Loja_SaldoDourado: texto=MOEDAS: 0 cor=RGBA(1.000, 0.850, 0.200, 1.000)
+[PASS] Loja_Subtitulo: texto=4 ofertas exclusivas desta visita — cada item pode ser comprado uma vez só.
+[PASS] Loja_4Cards: cards=4 (Card_ARMA RÍTMICA | Card_ESPADA E ESCUDO | Card_ARMADURA | Card_POÇÃO DE CURA)
+[PASS] Loja_2Armas_Sorteio: ARMA RITMICA + ESPADA E ESCUDO (equipada: ESPADA PADRAO)
+[PASS] Loja_Precos: [25,25,35,20] (esperado 25,25,35,20)
+[PASS] Loja_4Botoes: botoes=4
+[PASS] Loja_BotaoSair: texto=SAIR E CONTINUAR
+[PASS] Loja_Pocao_HPcheio: hp=5,0/5 interactable=False
+[PASS] Loja_Enriquece: moedas 0 -> 100
+[PASS] Loja_Saldo_AposMoedas: texto=MOEDAS: 100 esperado=MOEDAS: 100
+[PASS] Loja_Compra: preco=25 moedas 100 -> 75 label=COMPRADO interactable=False cor=RGBA(0.250, 0.250, 0.280, 1.000)
+[PASS] Loja_SaldoAtualizadoNaHora: texto=MOEDAS: 75 esperado=MOEDAS: 75
+[PASS] Loja_ArmaEquipadaAoComprar: arma ESPADA PADRAO -> ARMA RITMICA (esperado ARMA RITMICA)
+[PASS] Loja_OutraArmaBloqueada: slot1 interactable=False
+[PASS] Loja_SairEContinuar: open=False scale=1,00 active=True
+[PASS] Jogo_RetomaAposLoja: active=True open=False scale=1,00 level=5
+SUMMARY: PASS=21 FAIL=0 TOTAL=21

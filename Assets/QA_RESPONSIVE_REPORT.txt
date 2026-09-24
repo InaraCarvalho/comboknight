@@ -1,0 +1,31 @@
+=== COMBO KNIGHT RESPONSIVE ARENA QA (ETAPA 1) ===
+[PASS] 720x1280 (Retrato 9:16) Aspect sincronizado: cam.aspect=0,5625 esperado=0,5625
+[PASS] 720x1280 (Retrato 9:16) Paredes na borda visivel: WallLeft.x=-4,450 WallRight.x=4,450 halfWidth=3,950
+[PASS] 720x1280 (Retrato 9:16) Cavaleiro vira antes da borda: autoTurnX=3,350 (meia-largura=3,950, inverte 0,60 antes da borda)
+[PASS] 720x1280 (Retrato 9:16) Spawns dentro da tela: minSpawnX=-3,150 maxSpawnX=3,150 (visivel +/-3,950)
+[PASS] 720x1280 (Retrato 9:16) Chao colado na base: base da tela=-4,900, topo do chao=-4,500 (0,40 de tijolo visivel embaixo)
+[PASS] 720x1280 (Retrato 9:16) Arte da orientacao correta: sprite=background_arena_portrait esperado=background_arena_portrait
+[PASS] 720x1280 (Retrato 9:16) Background cobre a visao (sem vao preto): arte [-13,78..9,42] x +-4,18 vs visao [-4,90..9,14] x +-3,95, linha do chao da arte=-4,500
+[PASS] 1080x2400 (Retrato 9:20) Aspect sincronizado: cam.aspect=0,4500 esperado=0,4500
+[PASS] 1080x2400 (Retrato 9:20) Paredes na borda visivel: WallLeft.x=-4,450 WallRight.x=4,450 halfWidth=3,950
+[PASS] 1080x2400 (Retrato 9:20) Cavaleiro vira antes da borda: autoTurnX=3,350 (meia-largura=3,950, inverte 0,60 antes da borda)
+[PASS] 1080x2400 (Retrato 9:20) Spawns dentro da tela: minSpawnX=-3,150 maxSpawnX=3,150 (visivel +/-3,950)
+[PASS] 1080x2400 (Retrato 9:20) Chao colado na base: base da tela=-4,900, topo do chao=-4,500 (0,40 de tijolo visivel embaixo)
+[PASS] 1080x2400 (Retrato 9:20) Arte da orientacao correta: sprite=background_arena_portrait esperado=background_arena_portrait
+[PASS] 1080x2400 (Retrato 9:20) Background cobre a visao (sem vao preto): arte [-16,17..13,00] x +-5,25 vs visao [-4,90..12,66] x +-3,95, linha do chao da arte=-4,500
+[PASS] 1280x720 (Paisagem 16:9) Aspect sincronizado: cam.aspect=1,7778 esperado=1,7778
+[PASS] 1280x720 (Paisagem 16:9) Paredes na borda visivel: WallLeft.x=-8,144 WallRight.x=8,144 halfWidth=7,644
+[PASS] 1280x720 (Paisagem 16:9) Cavaleiro vira antes da borda: autoTurnX=7,044 (meia-largura=7,644, inverte 0,60 antes da borda)
+[PASS] 1280x720 (Paisagem 16:9) Spawns dentro da tela: minSpawnX=-6,844 maxSpawnX=6,844 (visivel +/-7,644)
+[PASS] 1280x720 (Paisagem 16:9) Chao colado na base: base da tela=-4,900, topo do chao=-4,500 (0,40 de tijolo visivel embaixo)
+[PASS] 1280x720 (Paisagem 16:9) Arte da orientacao correta: sprite=background_arena esperado=background_arena
+[PASS] 1280x720 (Paisagem 16:9) Background cobre a visao (sem vao preto): arte [-6,89..3,86] x +-9,56 vs visao [-4,90..3,70] x +-7,64, linha do chao da arte=-4,500
+[PASS] 2400x1080 (Paisagem 18:9) Aspect sincronizado: cam.aspect=2,2222 esperado=2,2222
+[PASS] 2400x1080 (Paisagem 18:9) Paredes na borda visivel: WallLeft.x=-10,056 WallRight.x=10,056 halfWidth=9,556
+[PASS] 2400x1080 (Paisagem 18:9) Cavaleiro vira antes da borda: autoTurnX=8,956 (meia-largura=9,556, inverte 0,60 antes da borda)
+[PASS] 2400x1080 (Paisagem 18:9) Spawns dentro da tela: minSpawnX=-8,756 maxSpawnX=8,756 (visivel +/-9,556)
+[PASS] 2400x1080 (Paisagem 18:9) Chao colado na base: base da tela=-4,900, topo do chao=-4,500 (0,40 de tijolo visivel embaixo)
+[PASS] 2400x1080 (Paisagem 18:9) Arte da orientacao correta: sprite=background_arena esperado=background_arena
+[PASS] 2400x1080 (Paisagem 18:9) Background cobre a visao (sem vao preto): arte [-6,94..4,03] x +-9,75 vs visao [-4,90..3,70] x +-9,56, linha do chao da arte=-4,500
+-------------------------------------------------
+SUMMARY: Total=28 | Passed=28 | Failed=0

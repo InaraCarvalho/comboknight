@@ -1,0 +1,12 @@
+QA XP NUMERIC TEXT - PLAY MODE (ETAPA 5)
+Date: 2026-09-22 17:47:16
+[PASS] Setup: active=True level=1 xp=0
+[PASS] XpText_Existe: text=True fill=True
+[PASS] XpText_Estilo: font=11 cor=RGBA(1.000, 1.000, 1.000, 1.000) bold=True outline=0,12/RGBA(0, 0, 0, 242) pai=XpBar
+[PASS] XpText_Inicial: texto='0 / 35 XP  (-35)' esperado='0 / 35 XP  (-35)' fill=0,000 esperadoFill=0,000 level=1 xp=0 total=35
+[PASS] Abate_Slime1_AtualizaNaHora: texto='12 / 35 XP  (-23)' esperado='12 / 35 XP  (-23)' fill=0,343 esperadoFill=0,343 level=1 xp=12 total=35
+[PASS] Abate_Slime2_Acumula: texto='24 / 35 XP  (-11)' esperado='24 / 35 XP  (-11)' fill=0,686 esperadoFill=0,686 level=1 xp=24 total=35
+[PASS] Abate_Slime3_SobeNivel_Reseta: texto='1 / 60 XP  (-59)' esperado='1 / 60 XP  (-59)' fill=0,017 esperadoFill=0,017 level=2 xp=1 total=60
+[PASS] SobeNv3_ResetaBarra: texto='0 / 85 XP  (-85)' esperado='0 / 85 XP  (-85)' fill=0,000 esperadoFill=0,000 level=3 xp=0 total=85
+[PASS] Abate_Morcego_AtualizaNaHora: texto='18 / 85 XP  (-67)' esperado='18 / 85 XP  (-67)' fill=0,212 esperadoFill=0,212 level=3 xp=18 total=85
+SUMMARY: PASS=9 FAIL=0 TOTAL=9

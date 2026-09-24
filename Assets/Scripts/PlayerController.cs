@@ -6,7 +6,12 @@ using DG.Tweening;
 [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] private float baseSpeed = 6.5f;
+    [SerializeField] private float baseSpeed = 5.0f;
+    // Adaga Veloz e a unica arma acima da velocidade base (ETAPA 2).
+    [SerializeField] private float daggerSpeed = 6.6f;
+    // Velocidade efetiva da arma atual (aplicada no movimento), calculada em
+    // ApplyWeaponStats.
+    private float weaponSpeed;
     [SerializeField] private float baseJumpForce = 13.5f;
     [SerializeField] private float jumpBufferTime = 0.12f;
     [SerializeField] private float coyoteTime = 0.12f;
@@ -32,10 +37,12 @@ public class PlayerController : MonoBehaviour
     private float knockbackTimer;
     private float attackTimer;
     public bool IsAttacking => attackTimer > 0f;
-    // Armadura comprada no mercador: absorve 1 golpe (barra extra de sobrevida)
-    // e NAO regenera/recupera sozinha; so volta ao comprar de novo no mercador.
-    private int armorCharges;
-    public bool HasArmor => armorCharges > 0;
+    // Armadura comprada no mercador (ETAPA 6): barra de sobrevida azul de
+    // 100 pontos que absorve golpes (-25 por hit) ANTES de tocar no HP;
+    // nao regenera sozinha; so recarrega comprando de novo no mercador.
+    public float MaxArmor { get; private set; } = 100f;
+    public float CurrentArmor { get; private set; } = 0f;
+    public bool HasArmor => CurrentArmor > 0f;
     // Apos comprar uma arma no mercador, o jogador fica preso nela (nao troca).
     private bool weaponLocked;
 
@@ -50,21 +57,37 @@ public class PlayerController : MonoBehaviour
     // private readonly Collider2D[] autoAttackHits = new Collider2D[8];
     // private Collider2D lockedAutoTarget;
 
-    public enum WeaponType { Broadsword, Dagger }
-    public WeaponType CurrentWeapon { get; private set; } = WeaponType.Broadsword;
+    // Armas do conceito (ETAPA 2), na ordem do ciclo de troca (E/Q): Espada
+    // Padrao (arma inicial) -> Adaga Veloz -> Lamina Real -> Arma Ritmica ->
+    // Espada & Escudo -> volta para a Padrao.
+    public enum WeaponType { Standard, Dagger, Broadsword, Rhythmic, ShieldSword }
+    public WeaponType CurrentWeapon { get; private set; } = WeaponType.Standard;
 
     private Rigidbody2D rb;
     private float moveInput;
     private float externalMoveInput;
     private bool isGrounded;
+    // Contato lateral com as paredes da arena (auto-run para de verdade ao
+    // encostar, sem ficar "empurrando" o collider a cada frame).
+    private bool contactWallLeft;
+    private bool contactWallRight;
     private float jumpBufferTimer;
     private float coyoteTimer;
     private int facingDirection = 1;
-    // Movimento continuo: o cavaleiro anda sozinho quando nao ha input do
-    // jogador e inverte a direcao ao chegar perto das paredes.
+    public int FacingDirection => facingDirection;
+    // Movimento contínuo automático com direção controlada pelo jogador: o
+    // cavaleiro anda sozinho na última direção escolhida e PARA ao encostar na
+    // parede. Não vira sozinho — a direção só muda quando o jogador aperta o
+    // botão/tecla do lado contrário.
     [SerializeField] private float autoTurnX = 6.5f;
     private int autoDirection = 1;
+    // Auto-run fica desligado quando o auto-pilot (F9) assume o controle, pois
+    // ele precisa de input e parada exatos para as rotinas de QA.
+    private bool autoRunEnabled = true;
     private HitFlash hitFlash;
+    // Throttle do feedback visual do bloqueio melee frontal (evita spam do
+    // texto "BLOQUEADO" a cada frame enquanto o inimigo permanece em contato).
+    private float lastBlockFeedback;
 
     private void Awake()
     {
@@ -112,28 +135,16 @@ public class PlayerController : MonoBehaviour
         if (Mathf.Abs(keyboardInput) > 0.05f)
         {
             moveInput = keyboardInput;
-            // Auto-movimento segue a ultima direcao que o jogador escolheu,
-            // para nao "puxar" o cavaleiro de volta ao soltar a tecla.
-            autoDirection = (keyboardInput > 0f) ? 1 : -1;
+            if (Mathf.Abs(moveInput) > 0.05f) autoDirection = (moveInput > 0f) ? 1 : -1;
         }
         else if (Mathf.Abs(externalMoveInput) > 0.05f)
         {
             moveInput = externalMoveInput;
-            autoDirection = (externalMoveInput > 0f) ? 1 : -1;
+            if (Mathf.Abs(moveInput) > 0.05f) autoDirection = (moveInput > 0f) ? 1 : -1;
         }
         else
         {
-            moveInput = autoDirection;
-        }
-
-        // Inverte a direcao automatica perto das paredes para o cavaleiro nao
-        // tentar atravessar a parede enquanto anda sozinho. Durante o knockback
-        // nao inverte, para nao lutar contra o empurrao.
-        if (knockbackTimer <= 0f)
-        {
-            float x = transform.position.x;
-            if (x > autoTurnX) autoDirection = -1;
-            else if (x < -autoTurnX) autoDirection = 1;
+            moveInput = autoRunEnabled ? autoDirection : 0f;
         }
 
         if (!IsAttacking)
@@ -151,7 +162,31 @@ public class PlayerController : MonoBehaviour
     {
         if (!other.CompareTag("Enemy")) return;
         if (swordCollider != null && swordCollider.IsTouching(other)) return;
+        if (TryBlockMelee(other.transform.position)) return;
         TakeDamage(1, other.transform.position);
+    }
+
+    // ===== Protecao frontal (ETAPA 2): ataque corpo a corpo pela frente =====
+    // O cavaleiro ENFRENTA os inimigos quando anda; golpe vindo do lado em que
+    // ele olha (frente) nunca o fere em nenhuma arma. Por tras continua ferindo
+    // normal. Com a Espada & Escudo o bloqueio ganha feedback visual ("BLOQUEADO");
+    // nas demais armas o golpe apenas e anulado, sem spam por frame.
+    private bool TryBlockMelee(Vector2 attackerPos)
+    {
+        float dx = attackerPos.x - transform.position.x;
+        if (Mathf.Abs(dx) < 0.001f) return true; // frontal puro
+        if ((dx > 0f) != (facingDirection > 0)) return false;
+
+        if (HasShield && Time.time - lastBlockFeedback > 0.4f)
+        {
+            lastBlockFeedback = Time.time;
+            VFXManager.Instance?.SpawnHitSpark(transform.position + Vector3.up * 0.5f);
+            GameManager.Instance?.FloatText(transform.position + Vector3.up * 1.2f,
+                "BLOQUEADO", new Color(0.6f, 0.88f, 1f), 3.8f);
+            GameManager.Instance?.TriggerScreenShake(0.15f, 0.18f);
+            GameManager.Instance?.PlaySound(GameManager.SoundType.Coin, 1.3f);
+        }
+        return true;
     }
 
     // ===== CODIGO ANTIGO COMENTADO: auto-ataque com trava de alvo =====
@@ -294,8 +329,10 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            float speedMultiplier = (CurrentWeapon == WeaponType.Dagger) ? 1.25f : 1.0f;
-            rb.linearVelocity = new Vector2(moveInput * baseSpeed * speedMultiplier, rb.linearVelocity.y);
+            float vx = moveInput * weaponSpeed;
+            if ((moveInput > 0.05f && contactWallRight) || (moveInput < -0.05f && contactWallLeft))
+                vx = 0f;
+            rb.linearVelocity = new Vector2(vx, rb.linearVelocity.y);
         }
     }
 
@@ -303,6 +340,90 @@ public class PlayerController : MonoBehaviour
     {
         externalMoveInput = dir;
         moveInput = dir;
+    }
+
+    // Auto-run (player anda sozinho na ultima direcao sem segurar o botao)
+    // fica desligado enquanto o auto-pilot de QA toma o controle.
+    public void SetAutoRun(bool enabled)
+    {
+        autoRunEnabled = enabled;
+        if (!enabled) externalMoveInput = 0f;
+    }
+
+    // Limites da arena enviados pela ResponsiveCamera: campo mantido por
+    // compatibilidade com o ResponsiveLayoutValidator (que confere se o valor
+    // acompanha a meia-largura visivel da tela). O cavaleiro NAO usa mais este
+    // valor para virar sozinho — a direcao agora e exclusiva do jogador.
+    public void SetArenaBounds(float halfWidth)
+    {
+        autoTurnX = halfWidth - 0.6f;
+    }
+
+    // ===== Espada & Escudo: anula projeteis frontais (ETAPA 2) =====
+    public bool HasShield => CurrentWeapon == WeaponType.ShieldSword;
+
+    // Projeto que chega pela FRENTE do cavaleiro (mesmo lado em que ele olha)
+    // e anulado enquanto a Espada & Escudo estiver ativa; por tras nao ha
+    // protecao. Chamado pelo script do projetil antes de aplicar dano, ou ja
+    // tratado aqui na hurtbox pelo callback com a tag "Projectile".
+    public bool TryBlockProjectile(Vector2 projectilePosition)
+    {
+        if (!HasShield) return false;
+        float dx = projectilePosition.x - transform.position.x;
+        if (Mathf.Abs(dx) < 0.001f) return true; // frontal puro
+        return (dx > 0f) == (facingDirection > 0);
+    }
+
+    // Hurtbox (trigger do corpo): o script Projectile e quem resolve dano e
+    // bloqueio (texto "BLOQUEADO" + VFX unicos). Aqui fica apenas o fallback
+    // para projetis sem o script, caso aparecam no futuro.
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other == null || !other.CompareTag("Projectile")) return;
+        if (other.GetComponent<Projectile>() != null) return;
+        if (!TryBlockProjectile(other.bounds.center)) return;
+        Destroy(other.gameObject);
+    }
+
+    // Caminho para projeteis com colisor solido (nao-trigger), mesma regra.
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        Collider2D other = collision.collider;
+        if (other == null) return;
+        UpdateWallContact(other, true);
+        if (!other.CompareTag("Projectile")) return;
+        if (other.GetComponent<Projectile>() != null) return;
+        if (!TryBlockProjectile(other.bounds.center)) return;
+        Destroy(other.gameObject);
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        if (collision.collider != null) UpdateWallContact(collision.collider, true);
+    }
+
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.collider != null) UpdateWallContact(collision.collider, false);
+    }
+
+    // Paredes da arena sao colisores solidos nomeados WallLeft/WallRight.
+    // Como o collider do corpo bate nelas, usamos a posicao relativa para
+    // marcar qual lado esta encostado e entao zerar a velocidade (auto-run
+    // nao empurra a parede). Colisao com o chao/inimigos nao conta.
+    private void UpdateWallContact(Collider2D other, bool active)
+    {
+        if (other.transform == null) return;
+        string n = other.name;
+        bool isLeftWall = n == "WallLeft" || n.StartsWith("WallLeft", System.StringComparison.Ordinal);
+        bool isRightWall = n == "WallRight" || n.StartsWith("WallRight", System.StringComparison.Ordinal);
+        if (isRightWall) contactWallRight = active;
+        else if (isLeftWall) contactWallLeft = active;
+    }
+
+    public void SetSwordActive(bool active)
+    {
+        if (swordCollider != null) swordCollider.enabled = active;
     }
 
     public void Jump()
@@ -340,7 +461,7 @@ public class PlayerController : MonoBehaviour
     {
         // (Mercador) depois de comprar uma arma o jogador fica com ela travada.
         if (weaponLocked) return;
-        CurrentWeapon = (CurrentWeapon == WeaponType.Broadsword) ? WeaponType.Dagger : WeaponType.Broadsword;
+        CurrentWeapon = GetNextWeapon(CurrentWeapon);
         ApplyWeaponStats();
         // lockedAutoTarget = null; // (removido junto com o auto-ataque)
 
@@ -352,24 +473,67 @@ public class PlayerController : MonoBehaviour
         GameManager.Instance?.UpdateWeaponHUD(CurrentWeapon);
     }
 
+    // Ciclo das 5 armas (ETAPA 2): Padrao -> Adaga -> Lamina Real -> Ritmica
+    // -> Escudo -> Padrao ...
+    public static WeaponType GetNextWeapon(WeaponType current)
+    {
+        switch (current)
+        {
+            case WeaponType.Standard: return WeaponType.Dagger;
+            case WeaponType.Dagger: return WeaponType.Broadsword;
+            case WeaponType.Broadsword: return WeaponType.Rhythmic;
+            case WeaponType.Rhythmic: return WeaponType.ShieldSword;
+            default: return WeaponType.Standard;
+        }
+    }
+
     private void ApplyWeaponStats()
     {
+        // Velocidade (ETAPA 2): base 5.0 para Standard, Lamina Real, Ritmica e
+        // Escudo; 6.6 para a Adaga Veloz.
+        weaponSpeed = (CurrentWeapon == WeaponType.Dagger) ? daggerSpeed : baseSpeed;
+
         if (swordCollider != null)
         {
-            if (CurrentWeapon == WeaponType.Broadsword)
+            switch (CurrentWeapon)
             {
-                swordCollider.size = new Vector2(0.55f, 0.75f);
-                swordCollider.offset = new Vector2(0.42f, 0.20f);
-            }
-            else
-            {
-                swordCollider.size = new Vector2(0.45f, 0.25f);
-                swordCollider.offset = new Vector2(0.32f, -0.05f);
+                case WeaponType.Dagger: // Adaga Veloz: hitbox curta (0.35 x 0.25)
+                    swordCollider.size = new Vector2(0.35f, 0.25f);
+                    swordCollider.offset = new Vector2(0.32f, -0.05f);
+                    break;
+                case WeaponType.Broadsword: // Lamina Real: hitbox longa (0.70 x 0.85)
+                    swordCollider.size = new Vector2(0.70f, 0.85f);
+                    swordCollider.offset = new Vector2(0.48f, 0.25f);
+                    break;
+                default: // Padrao, Ritmica e Escudo: hitbox padrao (0.50 x 0.60)
+                    swordCollider.size = new Vector2(0.50f, 0.60f);
+                    swordCollider.offset = new Vector2(0.40f, 0.15f);
+                    break;
             }
             swordCollider.enabled = true;
         }
 
+        // Arma Ritmica avisa o GameManager para estender a janela de combo
+        // (4.5s); as demais voltam ao padrao (3.2s). A protecao da Espada &
+        // Escudo nao precisa de estado extra: vale enquanto CurrentWeapon for
+        // ShieldSword (ver TryBlockProjectile).
+        ApplyComboDurationForCurrentWeapon();
+
         UpdatePlayerSprite();
+    }
+
+    private void ApplyComboDurationForCurrentWeapon()
+    {
+        // GameManager.Instance so existe em runtime: o fallback por busca
+        // mantem a duracao correta tambem quando o PlayerController acorda
+        // ANTES do GameManager (ordem de execucao dos Awakes) e na validacao
+        // em modo edicao (batch), onde o singleton ainda nao foi criado.
+        var gm = GameManager.Instance != null
+            ? GameManager.Instance
+            : FindAnyObjectByType<GameManager>();
+        gm?.SetComboDuration(CurrentWeapon == WeaponType.Rhythmic
+            ? GameManager.ExtendedComboDuration
+            : GameManager.DefaultComboDuration);
     }
 
     private void UpdatePlayerSprite()
@@ -378,7 +542,9 @@ public class PlayerController : MonoBehaviour
         // Arma ESTATICA: o cavaleiro fica sempre no sprite com a espada visivel/
         // estendida (independente de atacar). Antes alternava para o sprite de
         // ataque so durante o golpe e na idlea a espada sumia.
-        Sprite weaponSpr = (CurrentWeapon == WeaponType.Broadsword) ? broadswordSprite : daggerSprite;
+        // So a Adaga tem sprite proprio; as outras 4 armas usam a espada
+        // (nao ha artes separadas para padrao/ritmica/escudo).
+        Sprite weaponSpr = (CurrentWeapon == WeaponType.Dagger) ? daggerSprite : broadswordSprite;
         if (weaponSpr != null) bodyRenderer.sprite = weaponSpr;
 
         // Antigo (espada visivel somente durante o ataque):
@@ -404,7 +570,7 @@ public class PlayerController : MonoBehaviour
         attackTimer = attackDuration;
         // (Removido) agendava a proxima verificacao do auto-ataque:
         // autoAttackTimer = (CurrentWeapon == WeaponType.Broadsword) ? autoAttackCooldownBroadsword : autoAttackCooldownDagger;
-        VFXManager.Instance?.SpawnSlashArc(transform.position, CurrentWeapon == WeaponType.Broadsword, facingDirection);
+        VFXManager.Instance?.SpawnSlashArc(transform.position, CurrentWeapon != WeaponType.Dagger, facingDirection);
         GameManager.Instance?.PlaySound(GameManager.SoundType.Slash);
         AnimateSlashThrust();
         UpdatePlayerSprite();
@@ -437,7 +603,7 @@ public class PlayerController : MonoBehaviour
         // }
     }
 
-    public void TakeDamage(int amount, Vector2 enemyPosition)
+    public void TakeDamage(int damage, Vector3 attackerPos)
     {
         if (isInvulnerable || currentHearts <= 0) return;
 
@@ -455,19 +621,22 @@ public class PlayerController : MonoBehaviour
         hitFlash?.Flash(0.14f);
 
         knockbackTimer = 0.12f;
-        Vector2 knockbackDir = (transform.position.x > enemyPosition.x) ? Vector2.right : Vector2.left;
+        Vector2 knockbackDir = (transform.position.x > attackerPos.x) ? Vector2.right : Vector2.left;
         rb.linearVelocity = new Vector2(knockbackDir.x * 2.8f, 4.0f);
 
-        // Armadura absorve o dano sem tirar HP (nao regenera sozinha).
-        if (armorCharges > 0)
+        // Armadura (ETAPA 6): enquanto durar, absorve o golpe INTEIRO com -25
+        // de sobrevida azul (popup "ESCUDO -25") e o HP verde nao é tocado.
+        if (CurrentArmor > 0f)
         {
-            armorCharges--;
-            GameManager.Instance?.UpdateArmorHUD(HasArmor);
+            CurrentArmor = Mathf.Max(0f, CurrentArmor - 25f);
+            GameManager.Instance?.FloatText(transform.position + Vector3.up * 1.2f,
+                "ESCUDO -25", new Color(0.302f, 0.651f, 1f), 4.2f);
+            GameManager.Instance?.UpdateArmorHUD(CurrentArmor, MaxArmor);
             StartCoroutine(InvulnerabilityRoutine());
             return;
         }
 
-        currentHearts = Mathf.Max(0, currentHearts - amount);
+        currentHearts = Mathf.Max(0, currentHearts - damage);
         GameManager.Instance?.UpdateHeartsHUD(currentHearts);
 
         if (currentHearts <= 0) GameManager.Instance?.GameOver();
@@ -483,12 +652,12 @@ public class PlayerController : MonoBehaviour
         GameManager.Instance?.UpdateHeartsHUD(currentHearts);
     }
 
-    // Armadura do mercador: 1 carga (absorve 1 golpe). Comprar de novo quando
-    // ja tem armadura so RECARREGA a armadura atual (nao empilha).
+    // Armadura do mercador: recarrega a barra azul ao maximo (100). Comprar
+    // de novo quando ja tem armadura apenas restaura (nao empilha).
     public void GrantArmor()
     {
-        armorCharges = 1;
-        GameManager.Instance?.UpdateArmorHUD(true);
+        CurrentArmor = MaxArmor;
+        GameManager.Instance?.UpdateArmorHUD(CurrentArmor, MaxArmor);
     }
 
     // Arma comprada no mercador: fixa o jogador nela e trava a troca (E/Q).

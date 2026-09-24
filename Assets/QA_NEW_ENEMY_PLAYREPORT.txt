@@ -1,0 +1,31 @@
+QA NEW ENEMIES - PLAY MODE (ETAPA 3)
+Date: 2026-09-22 17:46:44
+[PASS] StartGame: active=True level=1 scale=1,00
+[PASS] PrefabsProcedurais: charger=True shooter=True projectile=True
+[PASS] Nv1_SemCharger: chargers=0
+[PASS] Nv1_SemBat: bats=0
+[PASS] Nv1_SemShooter: shooters=0
+[PASS] Sobe_Nv2: level=2
+[PASS] Nv2_ChargerSpawn: chargers=1
+[PASS] Nv2_SemShooter: shooters=0
+[PASS] Charger_Telegrafo: estado=Telegraph
+[PASS] Charger_Investida: estado=Charge
+[PASS] Charger_Velocidade12: velocidade≈12,0 (esperado ≈12)
+[PASS] Charger_InvestidaTermina: estado=Recover
+[PASS] Charger_Kill: kills 4 -> 5
+[PASS] Charger_Score150: score delta=150
+[PASS] Charger_XP15: xp delta=15 level 2 -> 2 (esperado 15 ou 15-60)
+[PASS] Sobe_Nv3: level=3
+[PASS] Nv3_BatSpawn: bats=1
+[PASS] Slime_Continuo: slimes vivos=1
+[PASS] Sobe_Nv4: level=4
+[PASS] Nv4_ShooterSpawn: shooters=1
+[PASS] Shooter_Laterais: |x|=4,93 (esperado ≥1.5)
+[PASS] Shooter_MiraAmarela: IsAiming=true visto
+[PASS] Shooter_Tiro: projeteis vistos=1
+[PASS] Projetil_Destruido_Apos: restantes=0
+[PASS] Projetil_SemEscudo_Dano: hearts 5,00 -> 4,00 restantes=0
+[PASS] Escudo_Bloqueio_Destroi: restantes=0
+[PASS] Escudo_SemDano: hearts 4,00 -> 4,00
+[PASS] Escudo_TextoBloqueado: texto BLOQUEADO visto
+SUMMARY: PASS=28 FAIL=0 TOTAL=28

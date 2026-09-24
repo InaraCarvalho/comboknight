@@ -1,0 +1,42 @@
+QA NEW ENEMIES - EDIT MODE (ETAPA 3)
+Date: 2026-09-22 17:45:29
+[PASS] Gating_Nv1: [Slime] (esperado Slime)
+[PASS] Gating_Nv2_Charger: [Slime,Charger] (esperado Slime+Charger)
+[PASS] Gating_Nv3_Bat: [Slime,Charger,Bat] (esperado Slime+Charger+Bat)
+[PASS] Gating_Nv4_Shooter: [Slime,Charger,Bat,Shooter] (esperado Slime+Charger+Bat+Shooter)
+[PASS] Gating_Nv5_Mantem: count=4 (esperado 4)
+[PASS] Charger.DetectRange: =3,5 (esperado 3.5)
+[PASS] Charger.TelegraphDuration: =0,6 (esperado 0.6)
+[PASS] Charger.ChargeSpeed: =12 (esperado 12)
+[PASS] Shooter.ShotInterval: =2 (esperado 2.0)
+[PASS] Shooter.AimDuration: =0,5 (esperado 0.5)
+[PASS] Charger.scoreValue: =150 (esperado 150)
+[PASS] Charger.xpValue: =15 (esperado 15)
+[PASS] Shooter.scoreValue: =200 (esperado 200)
+[PASS] Shooter.xpValue: =20 (esperado 20)
+[PASS] Projectile.speed: =6 (esperado 6)
+[PASS] Cena_SlimeWired: ok
+[PASS] Cena_BatWired: ok
+[PASS] Charger_PrefabCriado: ChargerPrefabTemplate
+[PASS] Charger_Tag: Enemy
+[PASS] Charger_Inativo: active=False
+[PASS] Charger_Componente: presente
+[PASS] Charger_Rigidbody: presente
+[PASS] Charger_Collider: presente
+[PASS] Charger_HitFlash: presente
+[PASS] Charger_CorLaranja: RGBA(1.000, 0.550, 0.080, 1.000)
+[PASS] Shooter_PrefabCriado: ShooterPrefabTemplate
+[PASS] Shooter_Tag: Enemy
+[PASS] Shooter_Inativo: active=False
+[PASS] Shooter_Componente: presente
+[PASS] Shooter_Rigidbody: presente
+[PASS] Shooter_Collider: presente
+[PASS] Shooter_HitFlash: presente
+[PASS] Shooter_WiringProjetil: ligado
+[PASS] Shooter_CorRoxa: RGBA(0.620, 0.250, 0.920, 1.000)
+[PASS] Projetil_PrefabCriado: ProjectilePrefabTemplate
+[PASS] Projetil_Tag: Projectile
+[PASS] Projetil_Componente: presente
+[PASS] Projetil_Trigger: isTrigger=True
+[PASS] Projetil_Rigidbody: presente
+SUMMARY: PASS=39 FAIL=0 TOTAL=39

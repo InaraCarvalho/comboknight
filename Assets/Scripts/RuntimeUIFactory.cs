@@ -25,6 +25,36 @@ public static class RuntimeUIFactory
         }
     }
 
+    private static Sprite cachedCircleSprite;
+
+    // Bolinha branca com borda suave (pixel alpha radial). Usada como icone de
+    // moeda na loja do mercador; a cor final vem do tint do Image.
+    public static Sprite CircleSprite
+    {
+        get
+        {
+            if (cachedCircleSprite != null) return cachedCircleSprite;
+            const int size = 32;
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            float center = (size - 1) * 0.5f;
+            float radius = center - 1f;
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = x - center;
+                    float dy = y - center;
+                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
+                    float a = Mathf.Clamp01(radius - dist + 0.5f);
+                    tex.SetPixel(x, y, new Color(1f, 1f, 1f, a));
+                }
+            }
+            tex.Apply();
+            cachedCircleSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f);
+            return cachedCircleSprite;
+        }
+    }
+
     public static GameObject CreateRect(string name, Transform parent, Vector2 anchoredPos, Vector2 size, Color color)
     {
         var go = new GameObject(name, typeof(RectTransform), typeof(Image));
